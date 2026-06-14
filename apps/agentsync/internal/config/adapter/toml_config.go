@@ -34,6 +34,9 @@ func ReadConfig() (config.Config, error) {
 	if _, err := toml.DecodeFile(path, &cfg); err != nil {
 		return config.Config{}, err
 	}
+	if cfg.SystemPromptFile == "" {
+		cfg.SystemPromptFile = config.DefaultSystemPromptFile
+	}
 	return cfg, nil
 }
 
