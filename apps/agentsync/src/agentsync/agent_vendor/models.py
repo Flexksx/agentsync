@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 
 class AgentVendorName(Enum):
@@ -13,6 +14,6 @@ class AgentVendorName(Enum):
 class AgentVendorConfiguration:
     vendor_name: AgentVendorName
     package_name: str
-    global_instruction_file_path: str
-    skills_directory_path: str
-    subagents_directory_path: str
+    global_instruction_file_path: Path
+    skills_directory_path: Path
+    subagents_directory_path: Path
