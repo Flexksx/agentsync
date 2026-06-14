@@ -10,7 +10,7 @@ class AgentVendorName(Enum):
     CURSOR_AGENT = "cursor-agent"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class AgentVendorConfiguration:
     vendor_name: AgentVendorName
     package_name: str
