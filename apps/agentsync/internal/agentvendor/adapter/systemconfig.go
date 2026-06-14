@@ -1,5 +1,4 @@
-// Package adapters provides concrete implementations of agentvendor ports.
-package adapters
+package adapter
 
 import (
 	"os"
