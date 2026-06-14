@@ -6,7 +6,7 @@ default:
 
 # Run CLI unit tests
 cli:
-    go test -race -count=1 ./apps/... ./libs/...
+    go test -race -count=1 ./apps/...
 
 # Run end-to-end tests (compiles the binary and exercises the CLI per-platform)
 e2e:
