@@ -16,5 +16,5 @@ pre-commit:
       run: go vet ./...
     lint-markdown:
       glob: "**/*.md"
-      run: rumdl --fix {staged_files}
+      run: rumdl check --fix {staged_files}
       stage_fixed: true
