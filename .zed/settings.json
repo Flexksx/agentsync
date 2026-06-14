@@ -5,12 +5,25 @@
 {
   "load_direnv": "direct",
   "languages": {
-    "Python": {
-      "language_servers": ["ty", "!basedpyright", "ruff"],
+    "Go": {
+      "language_servers": ["gopls"],
       "format_on_save": "on",
       "code_actions_on_format": {
-        "source.organizeImports.ruff": true,
-        "source.fixAll.ruff": true,
+        "source.organizeImports": true,
+      },
+      "formatter": {
+        "external": {
+          "command": "gofumpt",
+          "arguments": [],
+        },
+      },
+    },
+  },
+  "lsp": {
+    "gopls": {
+      "initialization_options": {
+        "gofumpt": true,
+        "staticcheck": true,
       },
     },
   },
@@ -21,9 +34,6 @@
     "**/CVS",
     "**/.DS_Store",
     "**/Thumbs.db",
-    "**/__pycache__",
-    "**/.pytest_cache",
-    "**/.mypy_cache",
-    "**/.ruff_cache",
+    "**/vendor",
   ],
 }
