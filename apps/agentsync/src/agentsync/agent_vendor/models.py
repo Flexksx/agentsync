@@ -13,5 +13,6 @@ class AgentVendorName(Enum):
 class AgentVendorConfiguration:
     vendor_name: AgentVendorName
     package_name: str
+    global_instruction_file_path: str
     skills_directory_path: str
     subagents_directory_path: str
