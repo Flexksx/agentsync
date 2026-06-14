@@ -1,0 +1,21 @@
+pre-commit:
+  commands:
+    format-nix:
+      glob: "**/*.nix"
+      run: alejandra {staged_files}
+      stage_fixed: true
+    format-python:
+      glob: "**/*.py"
+      run: uv run ruff format {staged_files}
+      stage_fixed: true
+    lint-python:
+      glob: "**/*.py"
+      run: uv run ruff check --fix {staged_files}
+      stage_fixed: true
+    typecheck-python:
+      glob: "**/*.py"
+      run: uv run ty check
+    lint-markdown:
+      glob: "**/*.md"
+      run: rumdl --fix {staged_files}
+      stage_fixed: true
