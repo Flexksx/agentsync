@@ -1,9 +1,12 @@
-package agentvendor
+// Package adapters provides concrete implementations of agentvendor ports.
+package adapters
 
 import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/flexksx/agentsync/apps/agentsync/internal/agentvendor"
 )
 
 const (
@@ -23,59 +26,59 @@ const (
 	cursorInstructionFile = "global.mdc"
 )
 
-func GetConfiguration(name AgentVendorName) (AgentVendorConfiguration, error) {
+func GetConfiguration(name agentvendor.AgentVendorName) (agentvendor.AgentVendorConfiguration, error) {
 	configs, err := platformConfigurations()
 	if err != nil {
-		return AgentVendorConfiguration{}, err
+		return agentvendor.AgentVendorConfiguration{}, err
 	}
 	cfg, ok := configs[name]
 	if !ok {
-		return AgentVendorConfiguration{}, &VendorConfigurationNotFoundError{Name: name}
+		return agentvendor.AgentVendorConfiguration{}, &agentvendor.VendorConfigurationNotFoundError{Name: name}
 	}
 	return cfg, nil
 }
 
-func platformConfigurations() (map[AgentVendorName]AgentVendorConfiguration, error) {
+func platformConfigurations() (map[agentvendor.AgentVendorName]agentvendor.AgentVendorConfiguration, error) {
 	switch runtime.GOOS {
 	case "linux", "darwin":
 		return posixConfigurations(), nil
 	case "windows":
 		return windowsConfigurations(), nil
 	default:
-		return nil, &UnsupportedPlatformError{Platform: runtime.GOOS}
+		return nil, &agentvendor.UnsupportedPlatformError{Platform: runtime.GOOS}
 	}
 }
 
-func posixConfigurations() map[AgentVendorName]AgentVendorConfiguration {
+func posixConfigurations() map[agentvendor.AgentVendorName]agentvendor.AgentVendorConfiguration {
 	home, _ := os.UserHomeDir()
 	claudeRoot := filepath.Join(home, ".claude")
 	codexRoot := filepath.Join(home, ".codex")
 	geminiRoot := filepath.Join(home, ".gemini")
 	cursorRoot := filepath.Join(home, ".cursor")
-	return map[AgentVendorName]AgentVendorConfiguration{
-		ClaudeCode: {
-			VendorName:                ClaudeCode,
+	return map[agentvendor.AgentVendorName]agentvendor.AgentVendorConfiguration{
+		agentvendor.ClaudeCode: {
+			VendorName:                agentvendor.ClaudeCode,
 			PackageName:               claudePackageName,
 			GlobalInstructionFilePath: filepath.Join(claudeRoot, claudeInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(claudeRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(claudeRoot, subagentsDir),
 		},
-		Codex: {
-			VendorName:                Codex,
+		agentvendor.Codex: {
+			VendorName:                agentvendor.Codex,
 			PackageName:               codexPackageName,
 			GlobalInstructionFilePath: filepath.Join(codexRoot, codexInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(codexRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(codexRoot, subagentsDir),
 		},
-		GeminiCLI: {
-			VendorName:                GeminiCLI,
+		agentvendor.GeminiCLI: {
+			VendorName:                agentvendor.GeminiCLI,
 			PackageName:               geminiPackageName,
 			GlobalInstructionFilePath: filepath.Join(geminiRoot, geminiInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(geminiRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(geminiRoot, subagentsDir),
 		},
-		CursorAgent: {
-			VendorName:                CursorAgent,
+		agentvendor.CursorAgent: {
+			VendorName:                agentvendor.CursorAgent,
 			PackageName:               cursorPackageName,
 			GlobalInstructionFilePath: filepath.Join(cursorRoot, cursorRulesDir, cursorInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(cursorRoot, skillsDir),
@@ -84,37 +87,37 @@ func posixConfigurations() map[AgentVendorName]AgentVendorConfiguration {
 	}
 }
 
-func windowsConfigurations() map[AgentVendorName]AgentVendorConfiguration {
+func windowsConfigurations() map[agentvendor.AgentVendorName]agentvendor.AgentVendorConfiguration {
 	home, _ := os.UserHomeDir()
 	roaming := filepath.Join(home, "AppData", "Roaming")
 	claudeRoot := filepath.Join(roaming, "Claude")
 	codexRoot := filepath.Join(roaming, "Codex")
 	geminiRoot := filepath.Join(roaming, "Gemini")
 	cursorRoot := filepath.Join(roaming, "Cursor")
-	return map[AgentVendorName]AgentVendorConfiguration{
-		ClaudeCode: {
-			VendorName:                ClaudeCode,
+	return map[agentvendor.AgentVendorName]agentvendor.AgentVendorConfiguration{
+		agentvendor.ClaudeCode: {
+			VendorName:                agentvendor.ClaudeCode,
 			PackageName:               claudePackageName,
 			GlobalInstructionFilePath: filepath.Join(claudeRoot, claudeInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(claudeRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(claudeRoot, subagentsDir),
 		},
-		Codex: {
-			VendorName:                Codex,
+		agentvendor.Codex: {
+			VendorName:                agentvendor.Codex,
 			PackageName:               codexPackageName,
 			GlobalInstructionFilePath: filepath.Join(codexRoot, codexInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(codexRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(codexRoot, subagentsDir),
 		},
-		GeminiCLI: {
-			VendorName:                GeminiCLI,
+		agentvendor.GeminiCLI: {
+			VendorName:                agentvendor.GeminiCLI,
 			PackageName:               geminiPackageName,
 			GlobalInstructionFilePath: filepath.Join(geminiRoot, geminiInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(geminiRoot, skillsDir),
 			SubagentsDirectoryPath:    filepath.Join(geminiRoot, subagentsDir),
 		},
-		CursorAgent: {
-			VendorName:                CursorAgent,
+		agentvendor.CursorAgent: {
+			VendorName:                agentvendor.CursorAgent,
 			PackageName:               cursorAgentPackageName,
 			GlobalInstructionFilePath: filepath.Join(cursorRoot, cursorRulesDir, cursorInstructionFile),
 			SkillsDirectoryPath:       filepath.Join(cursorRoot, skillsDir),

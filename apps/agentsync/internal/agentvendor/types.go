@@ -1,3 +1,4 @@
+// Package agentvendor defines supported AI agent vendors and their configuration.
 package agentvendor
 
 type AgentVendorName string
