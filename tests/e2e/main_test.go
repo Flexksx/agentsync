@@ -1,4 +1,4 @@
-// Package e2e contains end-to-end tests that exercise the agentsync CLI as a
+// Package e2e contains end-to-end tests that exercise the ponte CLI as a
 // real subprocess against an isolated $HOME, so the same suite runs identically
 // on Linux, macOS, and Windows CI runners.
 package e2e
@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// binaryPath holds the absolute path to the compiled agentsync binary used by
+// binaryPath holds the absolute path to the compiled ponte binary used by
 // every test in this package. It is populated by TestMain.
 var binaryPath string
 
@@ -29,13 +29,13 @@ func TestMain(m *testing.M) {
 }
 
 func runMain(m *testing.M) (int, error) {
-	tmpDir, err := os.MkdirTemp("", "agentsync-e2e-bin-*")
+	tmpDir, err := os.MkdirTemp("", "ponte-e2e-bin-*")
 	if err != nil {
 		return 0, fmt.Errorf("create temp dir: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	binName := "agentsync"
+	binName := "ponte"
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
 	}
@@ -46,7 +46,7 @@ func runMain(m *testing.M) (int, error) {
 		return 0, err
 	}
 
-	cmd := exec.Command("go", "build", "-o", binaryPath, "./apps/agentsync")
+	cmd := exec.Command("go", "build", "-o", binaryPath, "./apps/ponte")
 	cmd.Dir = repoRoot
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 	if out, err := cmd.CombinedOutput(); err != nil {

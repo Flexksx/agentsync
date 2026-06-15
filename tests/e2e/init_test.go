@@ -16,7 +16,7 @@ func TestInit_FirstSyncBootstrapsConfig(t *testing.T) {
 
 	// cobra's cmd.Print* writes to stderr by default; either stream is fine.
 	combined := stdout + stderr
-	if !strings.Contains(combined, "Initialized agentsync config") {
+	if !strings.Contains(combined, "Initialized ponte config") {
 		t.Errorf("expected init banner, got stdout=%q stderr=%q", stdout, stderr)
 	}
 
@@ -49,7 +49,7 @@ func TestInit_IsIdempotent(t *testing.T) {
 	stdout, stderr := h.mustRun("sync")
 
 	combined := stdout + stderr
-	if strings.Contains(combined, "Initialized agentsync config") {
+	if strings.Contains(combined, "Initialized ponte config") {
 		t.Errorf("second sync should not re-run init, stdout=%q stderr=%q", stdout, stderr)
 	}
 }

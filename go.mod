@@ -1,4 +1,4 @@
-module github.com/flexksx/agentsync
+module github.com/flexksx/ponte
 
 go 1.24
 

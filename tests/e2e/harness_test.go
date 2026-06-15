@@ -33,12 +33,12 @@ func newHarness(t *testing.T) *harness {
 		t:    t,
 		home: home,
 		configBy: func(name string) string {
-			return filepath.Join(home, ".config", "agentsync", name)
+			return filepath.Join(home, ".config", "ponte", name)
 		},
 	}
 }
 
-// run invokes the agentsync binary with the given args and returns the captured
+// run invokes the ponte binary with the given args and returns the captured
 // stdout, stderr, and error.
 func (h *harness) run(args ...string) (stdout, stderr string, err error) {
 	h.t.Helper()
@@ -64,7 +64,7 @@ func (h *harness) mustRun(args ...string) (stdout, stderr string) {
 	h.t.Helper()
 	stdout, stderr, err := h.run(args...)
 	if err != nil {
-		h.t.Fatalf("agentsync %s\nexit=%v\nstdout:\n%s\nstderr:\n%s",
+		h.t.Fatalf("ponte %s\nexit=%v\nstdout:\n%s\nstderr:\n%s",
 			strings.Join(args, " "), err, stdout, stderr)
 	}
 	return stdout, stderr

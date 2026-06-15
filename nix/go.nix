@@ -14,7 +14,7 @@
       ];
 
       devShells.default = pkgs.mkShell {
-        name = "agentsync-dev-env";
+        name = "ponte-dev-env";
         packages = config.shellPackages;
         shellHook = config.shellHooks;
       };

@@ -1,5 +1,5 @@
 {
-  description = "agentsync - CLI to sync skills and instructions for AI agent vendors";
+  description = "ponte - CLI to sync skills and instructions for AI agent vendors";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
