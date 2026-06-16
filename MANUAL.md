@@ -1,0 +1,1 @@
+apps/ponte/internal/cli/docs/manual.md
