@@ -6,4 +6,4 @@ default:
 
 # Build the CLI binary
 cli:
-    go build -o build/agentsync ./apps/agentsync/
+    go build -o out/ponte ./apps/ponte/
