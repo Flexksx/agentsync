@@ -1,8 +1,6 @@
 package sync
 
 import (
-	"fmt"
-
 	"github.com/flexksx/ponte/apps/ponte/internal/agentvendor"
 	"github.com/flexksx/ponte/apps/ponte/internal/config"
 	"github.com/flexksx/ponte/apps/ponte/internal/skill"
@@ -16,49 +14,55 @@ type UseCase struct {
 	GetAgentConfiguration agentvendor.ConfigurationPort
 	ResolveSkill          skill.Resolver
 	BuildGeneration       store.GenerationBuilder
+	ComputeHash           store.HashComputer
 	ActivateForVendor     store.VendorActivator
 }
 
-func (u *UseCase) Execute(request SyncRequest) error {
-	targets, err := u.resolveTargets(request.TargetAgents)
+type resolvedVendor struct {
+	name   agentvendor.AgentVendorName
+	config agentvendor.AgentVendorConfiguration
+}
+
+func (u *UseCase) Execute(request SyncRequest) (SyncResult, error) {
+	targetNames, err := u.resolveTargets(request.TargetAgents)
 	if err != nil {
-		return err
+		return SyncResult{}, err
+	}
+
+	vendors, err := u.resolveVendors(targetNames)
+	if err != nil {
+		return SyncResult{}, err
 	}
 
 	prompt, err := u.resolveSystemPrompt(request.SystemPromptOverride)
 	if err != nil {
-		return err
+		return SyncResult{}, err
 	}
 
-	resolvedSkills, err := u.resolveSkills(request.Skills)
+	input, err := ResolveBuildInput(prompt, request.Skills, request.Subagents, u.ResolveSkill)
 	if err != nil {
-		return err
+		return SyncResult{}, err
 	}
 
-	resolvedSubagents, err := u.resolveSubagents(request.Subagents)
-	if err != nil {
-		return err
-	}
-
-	generation, err := u.BuildGeneration(store.BuildInput{
-		SystemPromptContent: prompt.Content,
-		Skills:              resolvedSkills,
-		Subagents:           resolvedSubagents,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, target := range targets {
-		vendorConfig, err := u.GetAgentConfiguration(target)
+	if request.DryRun {
+		hash, err := u.ComputeHash(input)
 		if err != nil {
-			return ErrUnknownAgent{Name: target}
+			return SyncResult{}, err
 		}
-		if err := u.ActivateForVendor(generation, vendorConfig.GlobalInstructionFilePath, vendorConfig.SkillsDirectoryPath, vendorConfig.SubagentsDirectoryPath); err != nil {
-			return err
+		return SyncResult{GenerationHash: hash, Targets: targetNames, DryRun: true}, nil
+	}
+
+	generation, err := u.BuildGeneration(input)
+	if err != nil {
+		return SyncResult{}, err
+	}
+
+	for _, vendor := range vendors {
+		if err := u.ActivateForVendor(generation, vendor.config.GlobalInstructionFilePath, vendor.config.SkillsDirectoryPath, vendor.config.SubagentsDirectoryPath); err != nil {
+			return SyncResult{}, err
 		}
 	}
-	return nil
+	return SyncResult{GenerationHash: generation.Hash, Targets: targetNames, DryRun: false}, nil
 }
 
 func (u *UseCase) resolveTargets(requested []agentvendor.AgentVendorName) ([]agentvendor.AgentVendorName, error) {
@@ -81,33 +85,23 @@ func (u *UseCase) resolveTargets(requested []agentvendor.AgentVendorName) ([]age
 	return enabled, nil
 }
 
+// resolveVendors validates every target up front so an unknown agent fails
+// before anything is built — true for a dry run as much as a real sync.
+func (u *UseCase) resolveVendors(names []agentvendor.AgentVendorName) ([]resolvedVendor, error) {
+	vendors := make([]resolvedVendor, 0, len(names))
+	for _, name := range names {
+		vendorConfig, err := u.GetAgentConfiguration(name)
+		if err != nil {
+			return nil, ErrUnknownAgent{Name: name}
+		}
+		vendors = append(vendors, resolvedVendor{name: name, config: vendorConfig})
+	}
+	return vendors, nil
+}
+
 func (u *UseCase) resolveSystemPrompt(override *systemprompt.SystemPrompt) (systemprompt.SystemPrompt, error) {
 	if override != nil {
 		return *override, nil
 	}
 	return u.ReadSystemPrompt()
-}
-
-func (u *UseCase) resolveSkills(entries []config.SkillEntry) ([]store.ResolvedSkill, error) {
-	resolved := make([]store.ResolvedSkill, 0, len(entries))
-	for _, entry := range entries {
-		dir, err := u.ResolveSkill(entry.Source)
-		if err != nil {
-			return nil, fmt.Errorf("resolving skill %q: %w", entry.Name, err)
-		}
-		resolved = append(resolved, store.ResolvedSkill{Name: entry.Name, SourceDir: dir})
-	}
-	return resolved, nil
-}
-
-func (u *UseCase) resolveSubagents(entries []config.SubagentEntry) ([]store.ResolvedSubagent, error) {
-	resolved := make([]store.ResolvedSubagent, 0, len(entries))
-	for _, entry := range entries {
-		dir, err := u.ResolveSkill(entry.Source)
-		if err != nil {
-			return nil, fmt.Errorf("resolving subagent %q: %w", entry.Name, err)
-		}
-		resolved = append(resolved, store.ResolvedSubagent{Name: entry.Name, SourceDir: dir})
-	}
-	return resolved, nil
 }

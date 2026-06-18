@@ -20,6 +20,7 @@ import (
 func newSyncCommand() *cobra.Command {
 	var globalInstructionsFlag string
 	var agentsFlag []string
+	var dryRunFlag bool
 
 	cmd := &cobra.Command{
 		Use:   "sync",
@@ -66,33 +67,34 @@ func newSyncCommand() *cobra.Command {
 				GetAgentConfiguration: vendoradapter.GetConfiguration,
 				ResolveSkill:          skilladapter.NewResolver(gitCacheDir),
 				BuildGeneration:       storeadapter.NewBuilder(storeDir),
+				ComputeHash:           storeadapter.ComputeHash,
 				ActivateForVendor:     storeadapter.Activate,
 			}
 
-			if err := useCase.Execute(sync.SyncRequest{
+			result, err := useCase.Execute(sync.SyncRequest{
 				SystemPromptOverride: promptOverride,
 				TargetAgents:         targetAgents,
 				Skills:               cfg.Skills,
 				Subagents:            cfg.Subagents,
-			}); err != nil {
+				DryRun:               dryRunFlag,
+			})
+			if err != nil {
 				return err
 			}
 
-			targets := agentsFlag
-			if len(targets) == 0 {
-				for name, entry := range cfg.Agents {
-					if entry.Enabled {
-						targets = append(targets, string(name))
-					}
-				}
+			out := cmd.OutOrStdout()
+			if result.DryRun {
+				_, _ = fmt.Fprintf(out, "Dry run — would build generation %s and sync to: %v\n", shortHash(result.GenerationHash), result.Targets)
+				return nil
 			}
-			cmd.Printf("Synced to: %v\n", targets)
+			_, _ = fmt.Fprintf(out, "Synced generation %s to: %v\n", shortHash(result.GenerationHash), result.Targets)
 			return nil
 		},
 	}
 
 	cmd.Flags().StringVarP(&globalInstructionsFlag, "global-instructions", "g", "", "Override system prompt (file path or inline string)")
 	cmd.Flags().StringSliceVarP(&agentsFlag, "agents", "a", nil, "Target agents (ad-hoc, comma-separated: claude-code,codex,...)")
+	cmd.Flags().BoolVar(&dryRunFlag, "dry-run", false, "Resolve sources and report the generation that would be built without writing or activating anything")
 
 	return cmd
 }

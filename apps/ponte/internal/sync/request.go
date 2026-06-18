@@ -11,4 +11,5 @@ type SyncRequest struct {
 	TargetAgents         []agentvendor.AgentVendorName
 	Skills               []config.SkillEntry
 	Subagents            []config.SubagentEntry
+	DryRun               bool
 }

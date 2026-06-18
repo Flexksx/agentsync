@@ -36,6 +36,9 @@ func workingUseCase() UseCase {
 		BuildGeneration: func(input store.BuildInput) (store.Generation, error) {
 			return store.Generation{Hash: "testhash", RootPath: "/fake/store/testhash"}, nil
 		},
+		ComputeHash: func(_ store.BuildInput) (string, error) {
+			return "testhash", nil
+		},
 		ActivateForVendor: func(_ store.Generation, _, _, _ string) error {
 			return nil
 		},
@@ -51,7 +54,7 @@ func TestExecute_WithExplicitTargets_SkipsConfig(t *testing.T) {
 		return config.Config{}, nil
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 	if err != nil {
@@ -80,7 +83,7 @@ func TestExecute_WithNoTargets_UsesEnabledAgentsFromConfig(t *testing.T) {
 		return nil
 	}
 
-	err := useCase.Execute(SyncRequest{})
+	_, err := useCase.Execute(SyncRequest{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -109,7 +112,7 @@ func TestExecute_WithNoTargets_NoEnabledAgents_ReturnsErrNoAgentsConfigured(t *t
 		}, nil
 	}
 
-	err := useCase.Execute(SyncRequest{})
+	_, err := useCase.Execute(SyncRequest{})
 
 	var target ErrNoAgentsConfigured
 	if !errors.As(err, &target) {
@@ -132,7 +135,7 @@ func TestExecute_WithPromptOverride_WritesOverrideAndSkipsStore(t *testing.T) {
 	}
 	override := systemprompt.SystemPrompt{Content: "override"}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents:         []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 		SystemPromptOverride: &override,
 	})
@@ -159,7 +162,7 @@ func TestExecute_WithoutPromptOverride_UsesStoredPrompt(t *testing.T) {
 		return store.Generation{Hash: "h", RootPath: "/fake/store/h"}, nil
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 	if err != nil {
@@ -177,7 +180,7 @@ func TestExecute_WhenAgentConfigurationFails_ReturnsErrUnknownAgent(t *testing.T
 		return agentvendor.AgentVendorConfiguration{}, errors.New("not found")
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 
@@ -198,7 +201,7 @@ func TestExecute_WhenActivationFails_PropagatesError(t *testing.T) {
 		return activateErr
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 
@@ -215,7 +218,7 @@ func TestExecute_WhenBuildGenerationFails_PropagatesError(t *testing.T) {
 		return store.Generation{}, buildErr
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 
@@ -232,7 +235,7 @@ func TestExecute_WhenConfigReadFails_PropagatesError(t *testing.T) {
 		return config.Config{}, configErr
 	}
 
-	err := useCase.Execute(SyncRequest{})
+	_, err := useCase.Execute(SyncRequest{})
 
 	if !errors.Is(err, configErr) {
 		t.Errorf("expected config error to be propagated, got %v", err)
@@ -247,7 +250,7 @@ func TestExecute_WhenSystemPromptReadFails_PropagatesError(t *testing.T) {
 		return systemprompt.SystemPrompt{}, promptErr
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 	})
 
@@ -265,7 +268,7 @@ func TestExecute_WithMultipleTargets_ActivatesEachVendor(t *testing.T) {
 		return nil
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode, agentvendor.GeminiCLI},
 	})
 	if err != nil {
@@ -290,7 +293,7 @@ func TestExecute_WithSkills_ResolvesAndBuildsWithSkills(t *testing.T) {
 		return store.Generation{Hash: "h", RootPath: "/fake/store/h"}, nil
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 		Skills: []config.SkillEntry{
 			{Name: "my-skill", Source: skill.SkillSource{Type: skill.LocalSourceType, LocalPath: "/src/my-skill"}},
@@ -324,7 +327,7 @@ func TestExecute_WithSubagents_ResolvesAndBuildsWithSubagents(t *testing.T) {
 		return store.Generation{Hash: "h", RootPath: "/fake/store/h"}, nil
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 		Subagents: []config.SubagentEntry{
 			{Name: "claude", Source: skill.SkillSource{Type: skill.LocalSourceType, LocalPath: "/src/agents"}},
@@ -352,7 +355,7 @@ func TestExecute_WhenSubagentResolutionFails_PropagatesError(t *testing.T) {
 		return "", resolveErr
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 		Subagents: []config.SubagentEntry{
 			{Name: "bad", Source: skill.SkillSource{Type: skill.LocalSourceType, LocalPath: "/missing"}},
@@ -364,6 +367,62 @@ func TestExecute_WhenSubagentResolutionFails_PropagatesError(t *testing.T) {
 	}
 }
 
+func TestExecute_DryRun_ComputesHashWithoutBuildingOrActivating(t *testing.T) {
+	t.Parallel()
+	useCase := workingUseCase()
+	buildCalled := false
+	useCase.BuildGeneration = func(_ store.BuildInput) (store.Generation, error) {
+		buildCalled = true
+		return store.Generation{}, nil
+	}
+	activateCalled := false
+	useCase.ActivateForVendor = func(_ store.Generation, _, _, _ string) error {
+		activateCalled = true
+		return nil
+	}
+	useCase.ComputeHash = func(_ store.BuildInput) (string, error) {
+		return "previewhash", nil
+	}
+
+	result, err := useCase.Execute(SyncRequest{
+		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
+		DryRun:       true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if buildCalled {
+		t.Error("dry run must not build a generation")
+	}
+	if activateCalled {
+		t.Error("dry run must not activate any vendor")
+	}
+	if !result.DryRun {
+		t.Error("expected result.DryRun to be true")
+	}
+	if result.GenerationHash != "previewhash" {
+		t.Errorf("expected previewed hash, got %q", result.GenerationHash)
+	}
+}
+
+func TestExecute_DryRun_UnknownAgent_ReturnsErrUnknownAgent(t *testing.T) {
+	t.Parallel()
+	useCase := workingUseCase()
+	useCase.GetAgentConfiguration = func(_ agentvendor.AgentVendorName) (agentvendor.AgentVendorConfiguration, error) {
+		return agentvendor.AgentVendorConfiguration{}, errors.New("not found")
+	}
+
+	_, err := useCase.Execute(SyncRequest{
+		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
+		DryRun:       true,
+	})
+
+	var target ErrUnknownAgent
+	if !errors.As(err, &target) {
+		t.Errorf("expected ErrUnknownAgent even on dry run, got %T: %v", err, err)
+	}
+}
+
 func TestExecute_WhenSkillResolutionFails_PropagatesError(t *testing.T) {
 	t.Parallel()
 	resolveErr := errors.New("skill not found")
@@ -372,7 +431,7 @@ func TestExecute_WhenSkillResolutionFails_PropagatesError(t *testing.T) {
 		return "", resolveErr
 	}
 
-	err := useCase.Execute(SyncRequest{
+	_, err := useCase.Execute(SyncRequest{
 		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode},
 		Skills: []config.SkillEntry{
 			{Name: "bad-skill", Source: skill.SkillSource{Type: skill.LocalSourceType, LocalPath: "/missing"}},

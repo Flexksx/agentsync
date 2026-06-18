@@ -105,7 +105,7 @@ func linkSubagents(gen store.Generation, subagentsDirPath string) error {
 }
 
 func build(storeDir string, input store.BuildInput) (store.Generation, error) {
-	hash, err := computeHash(input)
+	hash, err := ComputeHash(input)
 	if err != nil {
 		return store.Generation{}, fmt.Errorf("computing generation hash: %w", err)
 	}
@@ -169,7 +169,10 @@ func build(storeDir string, input store.BuildInput) (store.Generation, error) {
 	return store.Generation{Hash: hash, RootPath: genPath}, nil
 }
 
-func computeHash(input store.BuildInput) (string, error) {
+// ComputeHash derives a generation's content hash from its inputs without
+// touching the store. build() and the status/dry-run previews share it so a
+// previewed hash always matches what a real sync would produce.
+func ComputeHash(input store.BuildInput) (string, error) {
 	h := sha256.New()
 
 	promptHash := sha256.Sum256([]byte(input.SystemPromptContent))

@@ -244,6 +244,35 @@ func TestSync_HelpListsSubcommands(t *testing.T) {
 	}
 }
 
+// `--dry-run` resolves and reports the would-be generation but must not write
+// to vendor files or create store generations.
+func TestSync_DryRun_WritesNothing(t *testing.T) {
+	if isWindows() {
+		t.Skip("symlink tests require Unix")
+	}
+	h := newHarness(t)
+	h.bootstrap()
+	h.mustRun("sysprompt", "set", "v1")
+	h.mustRun("sync")
+
+	generationsBefore := countStoreGenerations(t, h)
+	before := snapshotVendorFiles(t, h)
+
+	// Change the source, then dry-run: nothing should change on disk.
+	h.mustRun("sysprompt", "set", "v2-dry")
+	stdout, _ := h.mustRun("sync", "--dry-run")
+	if !strings.Contains(stdout, "Dry run") {
+		t.Errorf("expected dry-run notice, got:\n%s", stdout)
+	}
+
+	if after := countStoreGenerations(t, h); after != generationsBefore {
+		t.Errorf("dry run created a generation: before=%d after=%d", generationsBefore, after)
+	}
+	for vendor, want := range before {
+		h.assertFileEquals(h.vendorPaths()[vendor], want)
+	}
+}
+
 func snapshotVendorFiles(t *testing.T, h *harness) map[string]string {
 	t.Helper()
 	snap := map[string]string{}

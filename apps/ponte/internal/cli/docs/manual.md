@@ -182,12 +182,75 @@ ponte sync [flags]
 |------|-------|-------------|
 | `--global-instructions <file-or-string>` | `-g` | Override the system prompt for this invocation only. Reads from file if the argument is a path to an existing file; otherwise uses the string literally. The stored `AGENTS.md` is not modified. |
 | `--agents <list>` | `-a` | Comma-separated list of vendors to target, bypassing config. Example: `claude-code,codex`. |
+| `--dry-run` | | Resolve all sources and report the generation hash that would be built and the vendors that would be updated, without writing to the store or touching any vendor symlink. |
 
 On first run with no config present, `ponte sync` bootstraps
 `~/.config/ponte/config.toml` and an empty `AGENTS.md`, then proceeds.
 
+On success, `sync` prints the activated generation hash and the targeted
+vendors. With `--dry-run` it prints the generation that *would* be built and
+where it *would* sync, then exits without side effects — useful to preview the
+effect of source edits before committing them.
+
 **Exit codes:** 0 on success. Non-zero on any error (unknown agent,
 skill resolution failure, filesystem error).
+
+---
+
+### `ponte status`
+
+Show, per vendor, the generation its instruction symlink currently resolves to
+and whether it has drifted from what a sync would build now.
+
+```text
+ponte status
+```
+
+The first line reports the **would-be generation** — the hash a `ponte sync`
+would produce from the current sources. Each vendor row then shows:
+
+| Column | Meaning |
+|--------|---------|
+| `VENDOR` | The vendor name. |
+| `ENABLED` | Whether the vendor is enabled in `config.toml`. |
+| `ACTIVE` | The generation hash the vendor currently points at, or `—` if never synced. |
+| `STATE` | `in sync` (active matches would-be), `drifted` (active differs), `not synced` (no active generation), or `disabled` (a sync will not touch it). |
+
+Resolving the would-be generation fetches any git-backed sources, exactly as a
+real sync would.
+
+---
+
+### `ponte gc`
+
+Remove store generations that no vendor currently points to. All vendors are
+considered — including disabled ones — so a generation pinned by any vendor
+symlink is always kept.
+
+```text
+ponte gc [--dry-run]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | List the generations that would be removed without deleting them. |
+
+The store has no automatic garbage collection; superseded generations
+accumulate after every source change. `gc` reclaims them. The active
+generation for each vendor is never removed.
+
+---
+
+### `ponte subagents`
+
+List the subagents declared in `config.toml`, with each subagent's name, source
+type, and resolved source. Mirrors `ponte skills`.
+
+```text
+ponte subagents
+```
+
+Prints `No subagents configured.` when the config declares none.
 
 ---
 
@@ -333,7 +396,8 @@ git ref — produces a new generation.
 
 Cloned repos are fetched (not re-cloned) on subsequent syncs.
 
-**Garbage collection:** v1 has no automatic GC. Store generations
-accumulate until manually removed. Run `rm -rf
-~/.local/share/ponte/store/` to clear all generations; the next
-`ponte sync` rebuilds from source.
+**Garbage collection:** there is no *automatic* GC — generations accumulate
+after every source change. Run `ponte gc` to remove every generation no vendor
+points to (use `ponte gc --dry-run` to preview). The active generation for each
+vendor is always kept. To clear everything unconditionally, `rm -rf
+~/.local/share/ponte/store/`; the next `ponte sync` rebuilds from source.
