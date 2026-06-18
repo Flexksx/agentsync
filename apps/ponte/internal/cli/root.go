@@ -9,6 +9,7 @@ func NewRootCommand() *cobra.Command {
 	}
 	root.AddCommand(newSyncCommand())
 	root.AddCommand(newSyspromptCommand())
+	root.AddCommand(newSkillsCommand())
 	root.AddCommand(newManualCommand())
 	return root
 }

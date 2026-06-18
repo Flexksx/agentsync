@@ -191,6 +191,35 @@ skill resolution failure, filesystem error).
 
 ---
 
+### `ponte skills`
+
+List the skills declared in `config.toml`, with each skill's name,
+source type, and resolved source (local path, or git URL with ref and
+optional subdir).
+
+```text
+ponte skills
+```
+
+Prints `No skills configured.` when the config declares none.
+
+---
+
+### `ponte sysprompt`
+
+Print the current system prompt — the contents of the file
+`system_prompt_file` points to — to stdout, so it can be piped or
+redirected.
+
+```text
+ponte sysprompt
+ponte sysprompt > current-prompt.md
+```
+
+Prints a notice to stderr when no system prompt is set.
+
+---
+
 ### `ponte sysprompt set <file-or-string>`
 
 Persistently write the system prompt to `~/.config/ponte/AGENTS.md` (or

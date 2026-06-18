@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,26 @@ import (
 func newSyspromptCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sysprompt",
-		Short: "Manage the global system prompt",
+		Short: "Show or manage the global system prompt",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cfg, err := configadapter.ReadConfig()
+			if err != nil {
+				return err
+			}
+
+			prompt, err := promptadapter.ReadSystemPromptFromFile(cfg.SystemPromptFile)
+			if errors.Is(err, systemprompt.ErrNoSystemPrompt) {
+				cmd.PrintErrln("No system prompt set. Use `ponte sysprompt set <file-or-string>`.")
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+
+			_, _ = fmt.Fprint(cmd.OutOrStdout(), prompt.Content)
+			return nil
+		},
 	}
 	cmd.AddCommand(newSyspromptSetCommand())
 	return cmd
