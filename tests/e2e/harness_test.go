@@ -132,17 +132,21 @@ func (h *harness) vendorPaths() map[string]string {
 	if runtime.GOOS == "windows" {
 		roaming := filepath.Join(h.home, "AppData", "Roaming")
 		return map[string]string{
-			"claude-code":  filepath.Join(roaming, "Claude", "CLAUDE.md"),
-			"codex":        filepath.Join(roaming, "Codex", "instructions.md"),
-			"gemini-cli":   filepath.Join(roaming, "Gemini", "GEMINI.md"),
-			"cursor-agent": filepath.Join(roaming, "Cursor", "rules", "global.mdc"),
+			"claude-code":      filepath.Join(roaming, "Claude", "CLAUDE.md"),
+			"codex":            filepath.Join(roaming, "Codex", "instructions.md"),
+			"antigravity-cli":  filepath.Join(roaming, "Gemini", "GEMINI.md"),
+			"cursor-agent":     filepath.Join(roaming, "Cursor", "rules", "global.mdc"),
+			"opencode":         filepath.Join(roaming, "opencode", "AGENTS.md"),
+			"pi-agent":         filepath.Join(h.home, ".pi", "agent", "AGENTS.md"),
 		}
 	}
 	return map[string]string{
-		"claude-code":  filepath.Join(h.home, ".claude", "CLAUDE.md"),
-		"codex":        filepath.Join(h.home, ".codex", "instructions.md"),
-		"gemini-cli":   filepath.Join(h.home, ".gemini", "GEMINI.md"),
-		"cursor-agent": filepath.Join(h.home, ".cursor", "rules", "global.mdc"),
+		"claude-code":      filepath.Join(h.home, ".claude", "CLAUDE.md"),
+		"codex":            filepath.Join(h.home, ".codex", "instructions.md"),
+		"antigravity-cli":  filepath.Join(h.home, ".gemini", "GEMINI.md"),
+		"cursor-agent":     filepath.Join(h.home, ".cursor", "rules", "global.mdc"),
+		"opencode":         filepath.Join(h.home, ".config", "opencode", "AGENTS.md"),
+		"pi-agent":         filepath.Join(h.home, ".pi", "agent", "AGENTS.md"),
 	}
 }
 
@@ -151,17 +155,21 @@ func (h *harness) vendorSkillsDirs() map[string]string {
 	if runtime.GOOS == "windows" {
 		roaming := filepath.Join(h.home, "AppData", "Roaming")
 		return map[string]string{
-			"claude-code":  filepath.Join(roaming, "Claude", "skills"),
-			"codex":        filepath.Join(roaming, "Codex", "skills"),
-			"gemini-cli":   filepath.Join(roaming, "Gemini", "skills"),
-			"cursor-agent": filepath.Join(roaming, "Cursor", "skills"),
+			"claude-code":      filepath.Join(roaming, "Claude", "skills"),
+			"codex":            filepath.Join(roaming, "Codex", "skills"),
+			"antigravity-cli":  filepath.Join(roaming, "Gemini", "antigravity-cli", "skills"),
+			"cursor-agent":     filepath.Join(roaming, "Cursor", "skills"),
+			"opencode":         filepath.Join(roaming, "opencode", "skills"),
+			"pi-agent":         filepath.Join(h.home, ".pi", "agent", "skills"),
 		}
 	}
 	return map[string]string{
-		"claude-code":  filepath.Join(h.home, ".claude", "skills"),
-		"codex":        filepath.Join(h.home, ".codex", "skills"),
-		"gemini-cli":   filepath.Join(h.home, ".gemini", "skills"),
-		"cursor-agent": filepath.Join(h.home, ".cursor", "skills"),
+		"claude-code":      filepath.Join(h.home, ".claude", "skills"),
+		"codex":            filepath.Join(h.home, ".codex", "skills"),
+		"antigravity-cli":  filepath.Join(h.home, ".gemini", "antigravity-cli", "skills"),
+		"cursor-agent":     filepath.Join(h.home, ".cursor", "skills"),
+		"opencode":         filepath.Join(h.home, ".config", "opencode", "skills"),
+		"pi-agent":         filepath.Join(h.home, ".pi", "agent", "skills"),
 	}
 }
 
@@ -175,17 +183,21 @@ func (h *harness) vendorAgentsDirs() map[string]string {
 	if runtime.GOOS == "windows" {
 		roaming := filepath.Join(h.home, "AppData", "Roaming")
 		return map[string]string{
-			"claude-code":  filepath.Join(roaming, "Claude", "agents"),
-			"codex":        filepath.Join(roaming, "Codex", "agents"),
-			"gemini-cli":   filepath.Join(roaming, "Gemini", "agents"),
-			"cursor-agent": filepath.Join(roaming, "Cursor", "agents"),
+			"claude-code":      filepath.Join(roaming, "Claude", "agents"),
+			"codex":            filepath.Join(roaming, "Codex", "agents"),
+			"antigravity-cli":  filepath.Join(roaming, "Gemini", "antigravity-cli", "agents"),
+			"cursor-agent":     filepath.Join(roaming, "Cursor", "agents"),
+			"opencode":         filepath.Join(roaming, "opencode", "agents"),
+			"pi-agent":         filepath.Join(h.home, ".pi", "agent", "agents"),
 		}
 	}
 	return map[string]string{
-		"claude-code":  filepath.Join(h.home, ".claude", "agents"),
-		"codex":        filepath.Join(h.home, ".codex", "agents"),
-		"gemini-cli":   filepath.Join(h.home, ".gemini", "agents"),
-		"cursor-agent": filepath.Join(h.home, ".cursor", "agents"),
+		"claude-code":      filepath.Join(h.home, ".claude", "agents"),
+		"codex":            filepath.Join(h.home, ".codex", "agents"),
+		"antigravity-cli":  filepath.Join(h.home, ".gemini", "antigravity-cli", "agents"),
+		"cursor-agent":     filepath.Join(h.home, ".cursor", "agents"),
+		"opencode":         filepath.Join(h.home, ".config", "opencode", "agents"),
+		"pi-agent":         filepath.Join(h.home, ".pi", "agent", "agents"),
 	}
 }
 

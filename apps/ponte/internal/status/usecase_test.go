@@ -61,12 +61,12 @@ func TestExecute_ReportsWouldBeHashAndPerVendorState(t *testing.T) {
 	active := map[string]string{
 		instructionPath(agentvendor.ClaudeCode): "wouldbe", // in sync
 		instructionPath(agentvendor.Codex):      "oldhash", // drifted
-		// gemini-cli: no entry → not synced
+		// antigravity-cli: no entry → not synced
 	}
 	enabled := map[agentvendor.AgentVendorName]bool{
 		agentvendor.ClaudeCode:  true,
 		agentvendor.Codex:       true,
-		agentvendor.GeminiCLI:   true,
+		agentvendor.AntigravityCLI:   true,
 		agentvendor.CursorAgent: false,
 	}
 
@@ -89,9 +89,9 @@ func TestExecute_ReportsWouldBeHashAndPerVendorState(t *testing.T) {
 		t.Errorf("expected codex drifted (active but not matching), got %+v", codex)
 	}
 
-	gemini := findVendor(report, agentvendor.GeminiCLI)
+	gemini := findVendor(report, agentvendor.AntigravityCLI)
 	if gemini.HasActive {
-		t.Errorf("expected gemini-cli not synced, got %+v", gemini)
+		t.Errorf("expected antigravity-cli not synced, got %+v", gemini)
 	}
 
 	cursor := findVendor(report, agentvendor.CursorAgent)

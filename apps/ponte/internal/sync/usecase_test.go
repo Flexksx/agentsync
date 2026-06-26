@@ -74,7 +74,7 @@ func TestExecute_WithNoTargets_UsesEnabledAgentsFromConfig(t *testing.T) {
 			Vendors: map[agentvendor.AgentVendorName]config.AgentEntry{
 				agentvendor.ClaudeCode: {Enabled: true},
 				agentvendor.Codex:      {Enabled: false},
-				agentvendor.GeminiCLI:  {Enabled: true},
+				agentvendor.AntigravityCLI:  {Enabled: true},
 			},
 		}, nil
 	}
@@ -93,7 +93,7 @@ func TestExecute_WithNoTargets_UsesEnabledAgentsFromConfig(t *testing.T) {
 	if !activatedVendors["/fake/claude-code/instruction"] {
 		t.Error("expected activation for claude-code")
 	}
-	if !activatedVendors["/fake/gemini-cli/instruction"] {
+	if !activatedVendors["/fake/antigravity-cli/instruction"] {
 		t.Error("expected activation for gemini-cli")
 	}
 	if activatedVendors["/fake/codex/instruction"] {
@@ -269,7 +269,7 @@ func TestExecute_WithMultipleTargets_ActivatesEachVendor(t *testing.T) {
 	}
 
 	_, err := useCase.Execute(SyncRequest{
-		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode, agentvendor.GeminiCLI},
+		TargetAgents: []agentvendor.AgentVendorName{agentvendor.ClaudeCode, agentvendor.AntigravityCLI},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

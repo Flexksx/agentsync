@@ -38,10 +38,12 @@ func DefaultConfig() Config {
 	return Config{
 		SystemPromptFile: DefaultSystemPromptFile,
 		Vendors: map[agentvendor.AgentVendorName]AgentEntry{
-			agentvendor.ClaudeCode:  {Enabled: true},
-			agentvendor.Codex:       {Enabled: true},
-			agentvendor.GeminiCLI:   {Enabled: true},
-			agentvendor.CursorAgent: {Enabled: true},
+			agentvendor.ClaudeCode:     {Enabled: true},
+			agentvendor.Codex:          {Enabled: true},
+			agentvendor.AntigravityCLI: {Enabled: true},
+			agentvendor.CursorAgent:    {Enabled: true},
+			agentvendor.OpenCode:       {Enabled: true},
+			agentvendor.PiAgent:        {Enabled: true},
 		},
 	}
 }
