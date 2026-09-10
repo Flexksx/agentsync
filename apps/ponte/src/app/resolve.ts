@@ -1,12 +1,12 @@
 import {
+  buildVendorLayouts,
+  buildVendorPlan,
   type Config,
   parseSource,
-  planVendor,
   type ResolvedEntry,
   type SourceEntry,
   type VendorName,
   type VendorPlan,
-  vendorLayouts,
 } from "@ponte/core";
 import { listFiles } from "../infra/filesystem";
 import { resolveSource } from "../infra/git";
@@ -34,16 +34,16 @@ const resolveSubagents = (
     }),
   );
 
-export const planVendors = async (
+export const buildVendorPlans = async (
   config: Config,
   promptPath: string,
 ): Promise<Record<VendorName, VendorPlan>> => {
   const skills = await resolveSkills(config.skills);
   const subagents = await resolveSubagents(config.subagents);
-  const layouts = vendorLayouts(homeDirectory(), currentPlatform());
+  const layouts = buildVendorLayouts(homeDirectory(), currentPlatform());
   const plans = {} as Record<VendorName, VendorPlan>;
   for (const [name, layout] of Object.entries(layouts)) {
-    plans[name as VendorName] = planVendor(layout, promptPath, skills, subagents);
+    plans[name as VendorName] = buildVendorPlan(layout, promptPath, skills, subagents);
   }
   return plans;
 };

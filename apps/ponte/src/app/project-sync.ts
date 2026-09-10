@@ -1,7 +1,7 @@
-import { staleLinkPaths } from "@ponte/core";
+import { getStaleLinkPaths } from "@ponte/core";
 import { applyPlan, readSymlinks } from "../infra/links";
 import { writeProjectLock } from "../infra/project-file";
-import { type Project, resolveProject } from "./project";
+import { type Project, resolveProjectSkills } from "./project";
 
 export type ProjectSyncReport = {
   readonly root: string;
@@ -10,9 +10,9 @@ export type ProjectSyncReport = {
   readonly stale: number;
 };
 
-const syncProject = async (project: Project, apply: boolean): Promise<ProjectSyncReport> => {
-  const resolution = await resolveProject(project, apply);
-  const stale = staleLinkPaths(resolution.plan, await readSymlinks(resolution.plan));
+export const syncProject = async (project: Project, apply: boolean): Promise<ProjectSyncReport> => {
+  const resolution = await resolveProjectSkills(project, apply);
+  const stale = getStaleLinkPaths(resolution.plan, await readSymlinks(resolution.plan));
   if (apply) {
     await applyPlan(resolution.plan, stale);
     if (resolution.vendored.length > 0) await writeProjectLock(project.layout, resolution.lock);
@@ -24,9 +24,3 @@ const syncProject = async (project: Project, apply: boolean): Promise<ProjectSyn
     stale: stale.length,
   };
 };
-
-export const planProjectSync = (project: Project): Promise<ProjectSyncReport> =>
-  syncProject(project, false);
-
-export const runProjectSync = (project: Project): Promise<ProjectSyncReport> =>
-  syncProject(project, true);

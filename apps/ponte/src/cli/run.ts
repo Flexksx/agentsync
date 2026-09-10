@@ -2,29 +2,28 @@ import { parseArgs } from "node:util";
 import {
   type Config,
   describeSource,
+  formatShortCommit,
   isGitSource,
+  PROJECT_CONFIG_FILE,
   PROJECT_SKILLS_DIRECTORY,
   PROJECT_SOURCES_DIRECTORY,
   parseSource,
   type SourceEntry,
-  shortCommit,
   type VendorState,
 } from "@ponte/core";
 import chalk from "chalk";
-import { requireConfig } from "../app/configuration";
 import {
   findProject,
+  getProjectStatusReport,
   listProjectSkills,
   type Project,
   type ProjectSkillRow,
   type ProjectStatusReport,
-  readProjectStatus,
-  requireProject,
 } from "../app/project";
-import { type ProjectSyncReport, planProjectSync, runProjectSync } from "../app/project-sync";
+import { type ProjectSyncReport, syncProject } from "../app/project-sync";
 import { runProjectUpdate } from "../app/project-update";
-import { readStatus, type StatusReport } from "../app/status";
-import { planSync, runSync, type SyncReport } from "../app/sync";
+import { getStatusReport, type StatusReport } from "../app/status";
+import { findConfig, type SyncReport, syncVendors } from "../app/sync";
 import { readSystemPrompt, setSystemPrompt } from "../app/sysprompt";
 import manualText from "./manual.md" with { type: "text" };
 
@@ -52,6 +51,20 @@ const STATE_STYLES: Record<VendorState, (text: string) => string> = {
 
 const write = (line: string): void => process.stdout.write(line);
 
+const getConfig = async (): Promise<Config> => {
+  const config = await findConfig();
+  if (config === null) throw new Error("config not initialized - run `ponte sync` first");
+  return config;
+};
+
+const getProject = async (): Promise<Project> => {
+  const project = await findProject();
+  if (project === null) {
+    throw new Error(`no ${PROJECT_CONFIG_FILE} in this directory or any parent directory`);
+  }
+  return project;
+};
+
 const printBootstrap = (report: SyncReport): void => {
   if (report.bootstrap === null) return;
   write(`Initialized ponte config at ${report.bootstrap.configDirectory}\n`);
@@ -77,10 +90,6 @@ const printProjectSync = (report: ProjectSyncReport, dryRun: boolean): void => {
   printStale(report.stale, dryRun);
 };
 
-const runProjectSyncCommand = async (project: Project, dryRun: boolean): Promise<void> => {
-  printProjectSync(dryRun ? await planProjectSync(project) : await runProjectSync(project), dryRun);
-};
-
 const runSyncCommand = async (args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
@@ -102,18 +111,20 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
     if (typeof override === "string" || Array.isArray(agents)) {
       throw new Error("-g and -a apply to a global sync only, and this directory is a project");
     }
-    return runProjectSyncCommand(project, dryRun);
+    printProjectSync(await syncProject(project, !dryRun), dryRun);
+    return;
   }
 
   const request = {
     promptOverride: typeof override === "string" ? override : undefined,
     requestedVendors: Array.isArray(agents) ? agents : [],
   };
-  const report = dryRun ? await planSync(request) : await runSync(request);
-  printBootstrap(report);
+  const result = await syncVendors(request, !dryRun);
+  if (!result.ok) throw new Error(result.error);
+  printBootstrap(result.value);
   const verb = dryRun ? "Dry run - would link" : "Linked";
-  write(`${verb} to: ${report.vendors.join(", ")}\n`);
-  printStale(report.stale, dryRun);
+  write(`${verb} to: ${result.value.vendors.join(", ")}\n`);
+  printStale(result.value.stale, dryRun);
 };
 
 const printStatus = (report: StatusReport): void => {
@@ -149,10 +160,14 @@ const runStatusCommand = async (args: string[]): Promise<void> => {
   if (args.length > 0) throw new Error(`unexpected argument for status: ${args[0]}`);
   const project = await findProject();
   if (project !== null) {
-    printProjectStatus(await readProjectStatus(project));
+    printProjectStatus(await getProjectStatusReport(project));
     return;
   }
-  printStatus(await readStatus());
+  const config = await getConfig();
+  if (config === null) return;
+  const result = await getStatusReport(config);
+  if (!result.ok) throw new Error(result.error);
+  printStatus(result.value);
 };
 
 const printEntries = (noun: "skills" | "subagents", config: Config): void => {
@@ -186,7 +201,7 @@ const printProjectSkills = (rows: readonly ProjectSkillRow[]): void => {
   );
   for (const row of rows) {
     const kind = row.vendored ? "vendored" : "local";
-    const commit = row.commit === null ? NO_VALUE : shortCommit(row.commit);
+    const commit = row.commit === null ? NO_VALUE : formatShortCommit(row.commit);
     const source = describeSource(parseSource(row.entry.source, row.entry.ref, row.entry.subdir));
     write(
       `${row.name.padEnd(width)}  ${chalk.dim(kind.padEnd(KIND_COLUMN))}  ${chalk.dim(commit.padEnd(COMMIT_COLUMN))}  ${source}\n`,
@@ -201,7 +216,9 @@ const runSkillsCommand = async (args: string[]): Promise<void> => {
     printProjectSkills(await listProjectSkills(project));
     return;
   }
-  printEntries("skills", await requireConfig());
+  const config = await getConfig();
+  if (config === null) return;
+  printEntries("skills", config);
 };
 
 const runUpdateCommand = async (args: string[]): Promise<void> => {
@@ -211,43 +228,46 @@ const runUpdateCommand = async (args: string[]): Promise<void> => {
     allowPositionals: true,
   });
   if (positionals.length > 1) throw new Error(`unexpected argument for update: ${positionals[1]}`);
-  const project = await requireProject();
-  const report = await runProjectUpdate(project, positionals[0], values.force === true);
-  if (report.updated.length === 0) {
+  const project = await getProject();
+  if (project === null) return;
+  const result = await runProjectUpdate(project, positionals[0], values.force === true);
+  if (!result.ok) throw new Error(result.error);
+  if (result.value.updated.length === 0) {
     write("No vendored skills to update.\n");
     return;
   }
-  write(`Updated ${report.updated.length} skill(s) in ${chalk.cyan(report.root)}\n`);
-  for (const skill of report.updated) {
-    const commit = skill.commit === null ? NO_VALUE : shortCommit(skill.commit);
+  write(`Updated ${result.value.updated.length} skill(s) in ${chalk.cyan(result.value.root)}\n`);
+  for (const skill of result.value.updated) {
+    const commit = skill.commit === null ? NO_VALUE : formatShortCommit(skill.commit);
     write(`  ${skill.name} -> ${chalk.dim(commit)}\n`);
   }
 };
 
 const runSubagentsCommand = async (args: string[]): Promise<void> => {
   if (args.length > 0) throw new Error(`unexpected argument for subagents: ${args[0]}`);
-  printEntries("subagents", await requireConfig());
+  const config = await getConfig();
+  if (config === null) return;
+  printEntries("subagents", config);
 };
 
 const runSyspromptCommand = async (args: string[]): Promise<void> => {
   const [subcommand, argument] = args;
+  const config = await getConfig();
+  if (config === null) return;
   if (subcommand === "set") {
     if (argument === undefined) {
       throw new Error("missing argument for sysprompt set <file-or-string>");
     }
-    await setSystemPrompt(argument);
+    await setSystemPrompt(config, argument);
     write("System prompt updated.\n");
     return;
   }
   if (subcommand !== undefined) {
     throw new Error(`unknown subcommand for sysprompt: ${subcommand}`);
   }
-  const prompt = await readSystemPrompt();
+  const prompt = await readSystemPrompt(config);
   if (prompt === null) {
-    process.stderr.write(
-      `${chalk.red("No system prompt set. Use `ponte sysprompt set <file-or-string>`.")}\n`,
-    );
-    return;
+    throw new Error("No system prompt set. Use `ponte sysprompt set <file-or-string>`.");
   }
   write(prompt);
 };

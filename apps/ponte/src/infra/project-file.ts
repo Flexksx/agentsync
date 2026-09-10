@@ -1,17 +1,17 @@
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
-  ancestorDirectories,
-  normalizeProjectConfig,
+  getAncestorDirectories,
   PROJECT_CONFIG_FILE,
   type ProjectConfig,
   type ProjectLayout,
   type ProjectLock,
+  resolveProjectConfigPaths,
 } from "@ponte/core";
 import { decodeLock, decodeProjectConfig, encodeLock } from "./config-codec";
 
 export const findProjectRoot = async (start: string): Promise<string | null> => {
-  for (const directory of ancestorDirectories(start)) {
+  for (const directory of getAncestorDirectories(start)) {
     if (await Bun.file(join(directory, PROJECT_CONFIG_FILE)).exists()) return directory;
   }
   return null;
@@ -19,7 +19,7 @@ export const findProjectRoot = async (start: string): Promise<string | null> => 
 
 export const readProjectConfig = async (root: string): Promise<ProjectConfig> => {
   const text = await Bun.file(join(root, PROJECT_CONFIG_FILE)).text();
-  return normalizeProjectConfig(decodeProjectConfig(Bun.TOML.parse(text)), root);
+  return resolveProjectConfigPaths(decodeProjectConfig(Bun.TOML.parse(text)), root);
 };
 
 export const readProjectLock = async (layout: ProjectLayout): Promise<ProjectLock> => {

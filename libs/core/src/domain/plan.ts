@@ -27,7 +27,7 @@ const flattenedSubagentLinks = (
     })),
   );
 
-export const planVendor = (
+export const buildVendorPlan = (
   layout: VendorLayout,
   promptPath: string,
   skills: readonly ResolvedEntry[],
@@ -41,18 +41,21 @@ export const planVendor = (
   ownedDirectories: [layout.skills, layout.agents],
 });
 
-export const staleLinkPaths = (plan: VendorPlan, actual: ReadonlyMap<string, string>): string[] => {
+export const getStaleLinkPaths = (
+  plan: VendorPlan,
+  actual: ReadonlyMap<string, string>,
+): string[] => {
   const wanted = new Set(plan.links.map(link => link.path));
   return [...actual.keys()].filter(path => !wanted.has(path));
 };
 
-export const classifyVendor = (
+export const getVendorState = (
   plan: VendorPlan,
   actual: ReadonlyMap<string, string>,
 ): VendorState => {
   if (actual.size === 0) return "not synced";
   const correct = plan.links.every(link => actual.get(link.path) === link.target);
-  return correct && staleLinkPaths(plan, actual).length === 0 ? "in sync" : "drifted";
+  return correct && getStaleLinkPaths(plan, actual).length === 0 ? "in sync" : "drifted";
 };
 
 const isInsideProject = (root: string, path: string): boolean => {
@@ -68,7 +71,7 @@ const skillLink = (layout: ProjectLayout, baseDir: string, skill: ProjectSkillTa
   return { path, target: skillLinkTarget(layout, path, skill.directory) };
 };
 
-export const planProject = (
+export const buildProjectPlan = (
   layout: ProjectLayout,
   skills: readonly ProjectSkillTarget[],
 ): VendorPlan => {

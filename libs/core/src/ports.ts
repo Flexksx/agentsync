@@ -1,7 +1,8 @@
 import type { Config } from "./domain/config";
 import type { VendorPlan } from "./domain/plan";
 import type { Platform } from "./domain/platform";
-import type { ProjectConfig, ProjectLayout, ProjectLock } from "./domain/project";
+import type { ProjectLayout } from "./domain/project";
+import type { ProjectConfig, ProjectLock } from "./domain/project-config";
 import type { SkillSource } from "./domain/source";
 
 export type ResolvedSource = {

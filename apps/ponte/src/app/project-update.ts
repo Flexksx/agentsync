@@ -1,9 +1,12 @@
 import {
+  err,
   isGitSource,
   type LockEntry,
+  ok,
   type ProjectLayout,
   type ProjectLock,
   parseSource,
+  type Result,
   type SourceEntry,
   vendoredSkillPath,
 } from "@ponte/core";
@@ -11,7 +14,7 @@ import { directoriesDiffer, directoryExists, removeDirectory } from "../infra/fi
 import { resolveSource } from "../infra/git";
 import { gitCacheDirectoryPath } from "../infra/paths";
 import { readProjectLock, writeProjectLock } from "../infra/project-file";
-import { type Project, vendorSkill } from "./project";
+import { copyVendorSkill, type Project } from "./project";
 
 export type UpdatedSkill = { readonly name: string; readonly commit: string | null };
 
@@ -22,39 +25,28 @@ export type ProjectUpdateReport = {
 
 type Target = readonly [string, SourceEntry];
 
-export class UnknownProjectSkillError extends Error {
-  constructor(name: string) {
-    super(`unknown project skill: ${name}`);
-  }
-}
-
-export class LocalProjectSkillError extends Error {
-  constructor(name: string) {
-    super(`${name} is a local skill, so there is nothing to update`);
-  }
-}
-
-export class DirtyProjectSkillsError extends Error {
-  readonly names: readonly string[];
-  constructor(names: readonly string[]) {
-    super(
-      `${names.join(", ")}: the vendored copy differs from its locked commit, or the lock entry is missing - commit the copy, or pass --force to overwrite it`,
-    );
-    this.names = names;
-  }
-}
-
-const namedTarget = (project: Project, name: string): Target => {
+const namedTarget = (project: Project, name: string): Result<Target, string> => {
   const entry = project.config.skills[name];
-  if (entry === undefined) throw new UnknownProjectSkillError(name);
-  if (!isGitSource(entry.source)) throw new LocalProjectSkillError(name);
-  return [name, entry];
+  if (entry === undefined) return err(`unknown project skill: ${name}`);
+  if (!isGitSource(entry.source)) {
+    return err(`${name} is a local skill, so there is nothing to update`);
+  }
+  return ok([name, entry]);
 };
 
-const updateTargets = (project: Project, name: string | undefined): readonly Target[] =>
-  name === undefined
-    ? Object.entries(project.config.skills).filter(([, entry]) => isGitSource(entry.source))
-    : [namedTarget(project, name)];
+const updateTargets = (
+  project: Project,
+  name: string | undefined,
+): Result<readonly Target[], string> => {
+  if (name === undefined) {
+    return ok(
+      Object.entries(project.config.skills).filter(([, entry]) => isGitSource(entry.source)),
+    );
+  }
+  const result = namedTarget(project, name);
+  if (!result.ok) return result;
+  return ok([result.value]);
+};
 
 const isDirty = async (
   layout: ProjectLayout,
@@ -88,21 +80,28 @@ export const runProjectUpdate = async (
   project: Project,
   name: string | undefined,
   force: boolean,
-): Promise<ProjectUpdateReport> => {
-  const targets = updateTargets(project, name);
+): Promise<Result<ProjectUpdateReport, string>> => {
+  const targetsResult = updateTargets(project, name);
+  if (!targetsResult.ok) return targetsResult;
+  const targets = targetsResult.value;
+
   const lock = await readProjectLock(project.layout);
   if (!force) {
     const dirty = await dirtyTargets(project.layout, lock, targets);
-    if (dirty.length > 0) throw new DirtyProjectSkillsError(dirty);
+    if (dirty.length > 0) {
+      return err(
+        `${dirty.join(", ")}: the vendored copy differs from its locked commit, or the lock entry is missing - commit the copy, or pass --force to overwrite it`,
+      );
+    }
   }
   const locked: Record<string, LockEntry> = { ...lock.skills };
   const updated: UpdatedSkill[] = [];
   for (const [skill, entry] of targets) {
     await removeDirectory(vendoredSkillPath(project.layout, skill));
-    const commit = await vendorSkill(project.layout, skill, entry);
+    const commit = await copyVendorSkill(project.layout, skill, entry);
     if (commit !== null) locked[skill] = { commit };
     updated.push({ name: skill, commit });
   }
   await writeProjectLock(project.layout, { skills: locked });
-  return { root: project.layout.root, updated };
+  return ok({ root: project.layout.root, updated });
 };

@@ -86,7 +86,7 @@ export const parseVendorNames = (chunks: readonly string[]): VendorName[] => {
   return names;
 };
 
-export const vendorLayouts = (
+export const buildVendorLayouts = (
   home: string,
   platform: Platform,
 ): Record<VendorName, VendorLayout> => {

@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { type Config, normalizeConfig } from "@ponte/core";
+import { type Config, resolveConfigPaths } from "@ponte/core";
 import { decodeConfig, encodeConfig } from "./config-codec";
 import { configDirectoryPath, configFilePath, promptFilePath } from "./paths";
 
@@ -8,7 +8,7 @@ export const readConfig = async (): Promise<Config | null> => {
   const file = Bun.file(configFilePath());
   if (!(await file.exists())) return null;
   const parsed = Bun.TOML.parse(await file.text());
-  return normalizeConfig(decodeConfig(parsed), configDirectoryPath());
+  return resolveConfigPaths(decodeConfig(parsed), configDirectoryPath());
 };
 
 export const writeConfig = async (config: Config): Promise<void> => {

@@ -19,14 +19,14 @@ export type Config = {
 
 export const DEFAULT_SYSTEM_PROMPT_FILE = "AGENTS.md";
 
-export const defaultConfig = (): Config => ({
+export const createDefaultConfig = (): Config => ({
   systemPromptFile: DEFAULT_SYSTEM_PROMPT_FILE,
   vendors: Object.fromEntries(VENDORS.map(vendor => [vendor, { enabled: true }])),
   skills: {},
   subagents: {},
 });
 
-export const enabledVendors = (config: Config): VendorName[] =>
+export const getEnabledVendors = (config: Config): VendorName[] =>
   VENDORS.filter(vendor => config.vendors[vendor]?.enabled === true);
 
 const withAbsoluteSource = (entry: SourceEntry, configDirectory: string): SourceEntry =>
@@ -34,7 +34,7 @@ const withAbsoluteSource = (entry: SourceEntry, configDirectory: string): Source
     ? entry
     : { ...entry, source: join(configDirectory, entry.source) };
 
-export const absoluteSources = (
+export const resolveSourcePaths = (
   entries: Readonly<Record<string, SourceEntry>>,
   configDirectory: string,
 ): Record<string, SourceEntry> =>
@@ -45,8 +45,8 @@ export const absoluteSources = (
     ]),
   );
 
-export const normalizeConfig = (config: Config, configDirectory: string): Config => ({
+export const resolveConfigPaths = (config: Config, configDirectory: string): Config => ({
   ...config,
-  skills: absoluteSources(config.skills, configDirectory),
-  subagents: absoluteSources(config.subagents, configDirectory),
+  skills: resolveSourcePaths(config.skills, configDirectory),
+  subagents: resolveSourcePaths(config.subagents, configDirectory),
 });

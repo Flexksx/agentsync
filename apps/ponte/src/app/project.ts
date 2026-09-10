@@ -1,14 +1,13 @@
 import {
-  classifyVendor,
+  buildProjectPlan,
+  getProjectEnabledVendors,
+  getVendorState,
   isGitSource,
   type LockEntry,
-  PROJECT_CONFIG_FILE,
   type ProjectConfig,
   type ProjectLayout,
   type ProjectLock,
   parseSource,
-  planProject,
-  projectEnabledVendors,
   projectLayout,
   type SourceEntry,
   type VendorPlan,
@@ -51,27 +50,15 @@ export type ProjectStatusReport = {
   readonly state: VendorState;
 };
 
-export class NotInProjectError extends Error {
-  constructor() {
-    super(`no ${PROJECT_CONFIG_FILE} in this directory or any parent directory`);
-  }
-}
-
 export const findProject = async (): Promise<Project | null> => {
   const root = await findProjectRoot(currentDirectory());
   if (root === null) return null;
   const config = await readProjectConfig(root);
-  const enabled = projectEnabledVendors(config);
+  const enabled = getProjectEnabledVendors(config);
   return { layout: projectLayout(root, currentPlatform(), enabled), config };
 };
 
-export const requireProject = async (): Promise<Project> => {
-  const project = await findProject();
-  if (project === null) throw new NotInProjectError();
-  return project;
-};
-
-export const vendorSkill = async (
+export const copyVendorSkill = async (
   layout: ProjectLayout,
   name: string,
   entry: SourceEntry,
@@ -87,7 +74,7 @@ export const vendorSkill = async (
 const localSkillDirectory = (entry: SourceEntry): Promise<string> =>
   resolveSource(parseSource(entry.source, entry.ref, entry.subdir), gitCacheDirectoryPath());
 
-export const resolveProject = async (
+export const resolveProjectSkills = async (
   project: Project,
   materialize: boolean,
 ): Promise<ProjectResolution> => {
@@ -104,7 +91,7 @@ export const resolveProject = async (
     if (!(await directoryExists(directory))) {
       vendored.push(name);
       if (materialize) {
-        const commit = await vendorSkill(project.layout, name, entry);
+        const commit = await copyVendorSkill(project.layout, name, entry);
         if (commit !== null) locked[name] = { commit };
       }
     }
@@ -112,7 +99,7 @@ export const resolveProject = async (
   }
   return {
     skills,
-    plan: planProject(project.layout, skills),
+    plan: buildProjectPlan(project.layout, skills),
     lock: { skills: locked },
     vendored,
   };
@@ -128,13 +115,13 @@ export const listProjectSkills = async (project: Project): Promise<ProjectSkillR
   }));
 };
 
-export const readProjectStatus = async (project: Project): Promise<ProjectStatusReport> => {
-  const { plan } = await resolveProject(project, false);
+export const getProjectStatusReport = async (project: Project): Promise<ProjectStatusReport> => {
+  const { plan } = await resolveProjectSkills(project, false);
   const actual = await readSymlinks(plan);
   return {
     root: project.layout.root,
     skillsDirectory: project.layout.skills,
     linkCount: actual.size,
-    state: classifyVendor(plan, actual),
+    state: getVendorState(plan, actual),
   };
 };
