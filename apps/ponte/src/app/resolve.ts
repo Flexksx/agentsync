@@ -10,12 +10,21 @@ import {
 } from "@ponte/core";
 import { listFiles } from "../infra/filesystem";
 import { resolveSource } from "../infra/git";
-import { currentPlatform, gitCacheDirectoryPath, homeDirectory } from "../infra/paths";
+import {
+  currentPlatform,
+  gitCacheDirectoryPath,
+  homeDirectory,
+} from "../infra/paths";
 
 const resolveDirectory = (entry: SourceEntry): Promise<string> =>
-  resolveSource(parseSource(entry.source, entry.ref, entry.subdir), gitCacheDirectoryPath());
+  resolveSource(
+    parseSource(entry.source, entry.ref, entry.subdir),
+    gitCacheDirectoryPath(),
+  );
 
-const resolveSkills = (entries: Readonly<Record<string, SourceEntry>>): Promise<ResolvedEntry[]> =>
+const resolveSkills = (
+  entries: Readonly<Record<string, SourceEntry>>,
+): Promise<ResolvedEntry[]> =>
   Promise.all(
     Object.entries(entries).map(async ([name, entry]) => ({
       name,
@@ -43,7 +52,12 @@ export const buildVendorPlans = async (
   const layouts = buildVendorLayouts(homeDirectory(), currentPlatform());
   const plans = {} as Record<VendorName, VendorPlan>;
   for (const [name, layout] of Object.entries(layouts)) {
-    plans[name as VendorName] = buildVendorPlan(layout, promptPath, skills, subagents);
+    plans[name as VendorName] = buildVendorPlan(
+      layout,
+      promptPath,
+      skills,
+      subagents,
+    );
   }
   return plans;
 };

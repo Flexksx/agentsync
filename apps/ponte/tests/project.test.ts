@@ -19,8 +19,10 @@ import {
 const layout = projectLayout("/repo");
 const TOTAL_SKILL_DIRECTORIES = 1 + VENDORS.length;
 
-const findLink = (links: readonly { path: string; target: string }[], path: string) =>
-  links.find(l => l.path === path);
+const findLink = (
+  links: readonly { path: string; target: string }[],
+  path: string,
+) => links.find(l => l.path === path);
 
 describe("projectLayout", () => {
   it("places the links, the sources and the lock file", () => {
@@ -104,14 +106,23 @@ describe("buildProjectPlan", () => {
     const plan = buildProjectPlan(layout, [
       { name: "java", directory: "/repo/.ponte/sources/java" },
     ]);
-    const geminiLink = findLink(plan.links, "/repo/.gemini/antigravity-cli/skills/java");
+    const geminiLink = findLink(
+      plan.links,
+      "/repo/.gemini/antigravity-cli/skills/java",
+    );
     expect(geminiLink?.target).toBe("../../../.ponte/sources/java");
   });
 
   it("keeps a source outside the project absolute", () => {
-    const plan = buildProjectPlan(layout, [{ name: "java", directory: "/elsewhere/java" }]);
-    expect(findLink(plan.links, "/repo/.agents/skills/java")?.target).toBe("/elsewhere/java");
-    expect(findLink(plan.links, "/repo/.claude/skills/java")?.target).toBe("/elsewhere/java");
+    const plan = buildProjectPlan(layout, [
+      { name: "java", directory: "/elsewhere/java" },
+    ]);
+    expect(findLink(plan.links, "/repo/.agents/skills/java")?.target).toBe(
+      "/elsewhere/java",
+    );
+    expect(findLink(plan.links, "/repo/.claude/skills/java")?.target).toBe(
+      "/elsewhere/java",
+    );
   });
 
   it("owns agents and all vendor skill directories", () => {
@@ -146,7 +157,12 @@ describe("resolveProjectConfigPaths", () => {
 
   it("leaves git sources and absolute paths untouched", () => {
     const config = resolveProjectConfigPaths(
-      { skills: { git: { source: "https://x/y" }, abs: { source: "/abs/path" } } },
+      {
+        skills: {
+          git: { source: "https://x/y" },
+          abs: { source: "/abs/path" },
+        },
+      },
       "/repo",
     );
     expect(config.skills.git?.source).toBe("https://x/y");
@@ -159,7 +175,11 @@ describe("decodeProjectConfig", () => {
     const config = decodeProjectConfig({
       skills: { mine: { source: "https://x/y", ref: "abc", subdir: "sub" } },
     });
-    expect(config.skills.mine).toEqual({ source: "https://x/y", ref: "abc", subdir: "sub" });
+    expect(config.skills.mine).toEqual({
+      source: "https://x/y",
+      ref: "abc",
+      subdir: "sub",
+    });
   });
 
   it("rejects an unknown top-level key", () => {
@@ -188,7 +208,10 @@ describe("decodeProjectConfig", () => {
 
   it("rejects an unknown vendor name", () => {
     try {
-      decodeProjectConfig({ vendors: { "not-a-vendor": { enabled: true } }, skills: {} });
+      decodeProjectConfig({
+        vendors: { "not-a-vendor": { enabled: true } },
+        skills: {},
+      });
       expect(true).toBe(false);
     } catch (e) {
       expect(e instanceof ConfigError).toBe(true);
@@ -210,11 +233,15 @@ describe("lock file", () => {
   it("round-trips a commit per skill", () => {
     const encoded = encodeLock({ skills: { mine: { commit: "abc123" } } });
     expect(encoded).toContain('[skills.mine]\ncommit = "abc123"');
-    expect(decodeLock(Bun.TOML.parse(encoded))).toEqual({ skills: { mine: { commit: "abc123" } } });
+    expect(decodeLock(Bun.TOML.parse(encoded))).toEqual({
+      skills: { mine: { commit: "abc123" } },
+    });
   });
 
   it("encodes an empty lock without a table", () => {
-    expect(decodeLock(Bun.TOML.parse(encodeLock({ skills: {} })))).toEqual({ skills: {} });
+    expect(decodeLock(Bun.TOML.parse(encodeLock({ skills: {} })))).toEqual({
+      skills: {},
+    });
   });
 
   it("rejects an entry without a commit", () => {

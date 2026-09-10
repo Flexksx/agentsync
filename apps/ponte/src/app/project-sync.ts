@@ -10,12 +10,19 @@ export type ProjectSyncReport = {
   readonly stale: number;
 };
 
-export const syncProject = async (project: Project, apply: boolean): Promise<ProjectSyncReport> => {
+export const syncProject = async (
+  project: Project,
+  apply: boolean,
+): Promise<ProjectSyncReport> => {
   const resolution = await resolveProjectSkills(project, apply);
-  const stale = getStaleLinkPaths(resolution.plan, await readSymlinks(resolution.plan));
+  const stale = getStaleLinkPaths(
+    resolution.plan,
+    await readSymlinks(resolution.plan),
+  );
   if (apply) {
     await applyPlan(resolution.plan, stale);
-    if (resolution.vendored.length > 0) await writeProjectLock(project.layout, resolution.lock);
+    if (resolution.vendored.length > 0)
+      await writeProjectLock(project.layout, resolution.lock);
   }
   return {
     root: project.layout.root,

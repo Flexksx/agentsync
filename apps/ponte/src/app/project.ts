@@ -17,10 +17,21 @@ import {
 import { copyDirectoryWithoutGit, directoryExists } from "../infra/filesystem";
 import { resolveSource, resolveSourceDetails } from "../infra/git";
 import { readSymlinks } from "../infra/links";
-import { currentDirectory, currentPlatform, gitCacheDirectoryPath } from "../infra/paths";
-import { findProjectRoot, readProjectConfig, readProjectLock } from "../infra/project-file";
+import {
+  currentDirectory,
+  currentPlatform,
+  gitCacheDirectoryPath,
+} from "../infra/paths";
+import {
+  findProjectRoot,
+  readProjectConfig,
+  readProjectLock,
+} from "../infra/project-file";
 
-export type Project = { readonly layout: ProjectLayout; readonly config: ProjectConfig };
+export type Project = {
+  readonly layout: ProjectLayout;
+  readonly config: ProjectConfig;
+};
 
 export type ProjectSkill = {
   readonly name: string;
@@ -67,18 +78,26 @@ export const copyVendorSkill = async (
     parseSource(entry.source, entry.ref, entry.subdir),
     gitCacheDirectoryPath(),
   );
-  await copyDirectoryWithoutGit(resolved.directory, vendoredSkillPath(layout, name));
+  await copyDirectoryWithoutGit(
+    resolved.directory,
+    vendoredSkillPath(layout, name),
+  );
   return resolved.commit;
 };
 
 const localSkillDirectory = (entry: SourceEntry): Promise<string> =>
-  resolveSource(parseSource(entry.source, entry.ref, entry.subdir), gitCacheDirectoryPath());
+  resolveSource(
+    parseSource(entry.source, entry.ref, entry.subdir),
+    gitCacheDirectoryPath(),
+  );
 
 export const resolveProjectSkills = async (
   project: Project,
   materialize: boolean,
 ): Promise<ProjectResolution> => {
-  const locked: Record<string, LockEntry> = { ...(await readProjectLock(project.layout)).skills };
+  const locked: Record<string, LockEntry> = {
+    ...(await readProjectLock(project.layout)).skills,
+  };
   const skills: ProjectSkill[] = [];
   const vendored: string[] = [];
   for (const [name, entry] of Object.entries(project.config.skills)) {
@@ -95,7 +114,12 @@ export const resolveProjectSkills = async (
         if (commit !== null) locked[name] = { commit };
       }
     }
-    skills.push({ name, directory, vendored: true, commit: locked[name]?.commit ?? null });
+    skills.push({
+      name,
+      directory,
+      vendored: true,
+      commit: locked[name]?.commit ?? null,
+    });
   }
   return {
     skills,
@@ -105,7 +129,9 @@ export const resolveProjectSkills = async (
   };
 };
 
-export const listProjectSkills = async (project: Project): Promise<ProjectSkillRow[]> => {
+export const listProjectSkills = async (
+  project: Project,
+): Promise<ProjectSkillRow[]> => {
   const lock = await readProjectLock(project.layout);
   return Object.entries(project.config.skills).map(([name, entry]) => ({
     name,
@@ -115,7 +141,9 @@ export const listProjectSkills = async (project: Project): Promise<ProjectSkillR
   }));
 };
 
-export const getProjectStatusReport = async (project: Project): Promise<ProjectStatusReport> => {
+export const getProjectStatusReport = async (
+  project: Project,
+): Promise<ProjectStatusReport> => {
   const { plan } = await resolveProjectSkills(project, false);
   const actual = await readSymlinks(plan);
   return {

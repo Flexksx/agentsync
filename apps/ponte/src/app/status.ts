@@ -25,7 +25,9 @@ export type StatusReport = {
   readonly vendors: readonly VendorStatus[];
 };
 
-export const getStatusReport = async (config: Config): Promise<Result<StatusReport, string>> => {
+export const getStatusReport = async (
+  config: Config,
+): Promise<Result<StatusReport, string>> => {
   const promptPath = promptFilePath(config.systemPromptFile);
   if (!(await fileExists(promptPath))) {
     return err(`system prompt not found: ${config.systemPromptFile}`);

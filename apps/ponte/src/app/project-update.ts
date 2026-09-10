@@ -10,13 +10,20 @@ import {
   type SourceEntry,
   vendoredSkillPath,
 } from "@ponte/core";
-import { directoriesDiffer, directoryExists, removeDirectory } from "../infra/filesystem";
+import {
+  directoriesDiffer,
+  directoryExists,
+  removeDirectory,
+} from "../infra/filesystem";
 import { resolveSource } from "../infra/git";
 import { gitCacheDirectoryPath } from "../infra/paths";
 import { readProjectLock, writeProjectLock } from "../infra/project-file";
 import { copyVendorSkill, type Project } from "./project";
 
-export type UpdatedSkill = { readonly name: string; readonly commit: string | null };
+export type UpdatedSkill = {
+  readonly name: string;
+  readonly commit: string | null;
+};
 
 export type ProjectUpdateReport = {
   readonly root: string;
@@ -25,7 +32,10 @@ export type ProjectUpdateReport = {
 
 type Target = readonly [string, SourceEntry];
 
-const namedTarget = (project: Project, name: string): Result<Target, string> => {
+const namedTarget = (
+  project: Project,
+  name: string,
+): Result<Target, string> => {
   const entry = project.config.skills[name];
   if (entry === undefined) return err(`unknown project skill: ${name}`);
   if (!isGitSource(entry.source)) {
@@ -40,7 +50,9 @@ const updateTargets = (
 ): Result<readonly Target[], string> => {
   if (name === undefined) {
     return ok(
-      Object.entries(project.config.skills).filter(([, entry]) => isGitSource(entry.source)),
+      Object.entries(project.config.skills).filter(([, entry]) =>
+        isGitSource(entry.source),
+      ),
     );
   }
   const result = namedTarget(project, name);

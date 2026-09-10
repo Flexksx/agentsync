@@ -13,7 +13,7 @@
 
   "formatter": {
     "enabled": true,
-    "lineWidth": 100,
+    "lineWidth": 80,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",

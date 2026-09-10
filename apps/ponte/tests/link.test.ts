@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { buildVendorPlan, getStaleLinkPaths, getVendorState } from "@ponte/core";
+import {
+  buildVendorPlan,
+  getStaleLinkPaths,
+  getVendorState,
+} from "@ponte/core";
 
 const layout = {
   instruction: "/home/u/.claude/CLAUDE.md",
@@ -11,19 +15,32 @@ const plan = buildVendorPlan(
   layout,
   "/cfg/AGENTS.md",
   [{ name: "java", sourceDirectory: "/cfg/skills/java", files: [] }],
-  [{ name: "team", sourceDirectory: "/cfg/subagents/team", files: ["a.md", "b.md"] }],
+  [
+    {
+      name: "team",
+      sourceDirectory: "/cfg/subagents/team",
+      files: ["a.md", "b.md"],
+    },
+  ],
 );
 
-const actualFor = (plan: { links: readonly { path: string; target: string }[] }) =>
-  new Map(plan.links.map(link => [link.path, link.target]));
+const actualFor = (plan: {
+  links: readonly { path: string; target: string }[];
+}) => new Map(plan.links.map(link => [link.path, link.target]));
 
 describe("buildVendorPlan", () => {
   it("links the prompt, each skill directory and each subagent file", () => {
     expect(plan.links).toEqual([
       { path: "/home/u/.claude/CLAUDE.md", target: "/cfg/AGENTS.md" },
       { path: "/home/u/.claude/skills/java", target: "/cfg/skills/java" },
-      { path: "/home/u/.claude/agents/a.md", target: "/cfg/subagents/team/a.md" },
-      { path: "/home/u/.claude/agents/b.md", target: "/cfg/subagents/team/b.md" },
+      {
+        path: "/home/u/.claude/agents/a.md",
+        target: "/cfg/subagents/team/a.md",
+      },
+      {
+        path: "/home/u/.claude/agents/b.md",
+        target: "/cfg/subagents/team/b.md",
+      },
     ]);
   });
 });
@@ -32,7 +49,9 @@ describe("getStaleLinkPaths", () => {
   it("reports links the config no longer asks for", () => {
     const actual = actualFor(plan);
     actual.set("/home/u/.claude/skills/dropped", "/cfg/skills/dropped");
-    expect(getStaleLinkPaths(plan, actual)).toEqual(["/home/u/.claude/skills/dropped"]);
+    expect(getStaleLinkPaths(plan, actual)).toEqual([
+      "/home/u/.claude/skills/dropped",
+    ]);
   });
 
   it("reports nothing when the links match", () => {

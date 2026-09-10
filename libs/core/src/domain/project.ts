@@ -10,7 +10,10 @@ export type ProjectLayout = {
   readonly lockFile: string;
 };
 
-export type ProjectSkillTarget = { readonly name: string; readonly directory: string };
+export type ProjectSkillTarget = {
+  readonly name: string;
+  readonly directory: string;
+};
 
 export const PROJECT_SOURCES_DIRECTORY = join(".ponte", "sources");
 
@@ -37,5 +40,7 @@ export const projectLayout = (
   };
 };
 
-export const vendoredSkillPath = (layout: ProjectLayout, name: string): string =>
-  join(layout.sources, name);
+export const vendoredSkillPath = (
+  layout: ProjectLayout,
+  name: string,
+): string => join(layout.sources, name);

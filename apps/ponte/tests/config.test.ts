@@ -39,7 +39,10 @@ describe("parseSource", () => {
     });
   });
   it("parses a local source and drops git-only fields", () => {
-    expect(parseSource("/local/dir")).toEqual({ type: "local", path: "/local/dir" });
+    expect(parseSource("/local/dir")).toEqual({
+      type: "local",
+      path: "/local/dir",
+    });
   });
 });
 
@@ -88,7 +91,10 @@ describe("decodeConfig", () => {
 
 describe("resolveConfigPaths", () => {
   it("expands relative local paths against the config dir", () => {
-    const norm = resolveConfigPaths(cfgWith({ s: { source: "skills/s" } }), "/cfg");
+    const norm = resolveConfigPaths(
+      cfgWith({ s: { source: "skills/s" } }),
+      "/cfg",
+    );
     expect(norm.skills.s?.source).toBe("/cfg/skills/s");
   });
 

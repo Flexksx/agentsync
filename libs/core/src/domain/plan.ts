@@ -10,7 +10,10 @@ export type VendorPlan = {
 
 export type VendorState = "in sync" | "drifted" | "not synced" | "disabled";
 
-const skillDirectoryLinks = (layout: VendorLayout, skills: readonly ResolvedEntry[]): Link[] =>
+const skillDirectoryLinks = (
+  layout: VendorLayout,
+  skills: readonly ResolvedEntry[],
+): Link[] =>
   skills.map(skill => ({
     path: join(layout.skills, skill.name),
     target: skill.sourceDirectory,
@@ -54,8 +57,12 @@ export const getVendorState = (
   actual: ReadonlyMap<string, string>,
 ): VendorState => {
   if (actual.size === 0) return "not synced";
-  const correct = plan.links.every(link => actual.get(link.path) === link.target);
-  return correct && getStaleLinkPaths(plan, actual).length === 0 ? "in sync" : "drifted";
+  const correct = plan.links.every(
+    link => actual.get(link.path) === link.target,
+  );
+  return correct && getStaleLinkPaths(plan, actual).length === 0
+    ? "in sync"
+    : "drifted";
 };
 
 const isInsideProject = (root: string, path: string): boolean => {
@@ -63,10 +70,20 @@ const isInsideProject = (root: string, path: string): boolean => {
   return inside !== "" && !inside.startsWith("..") && !isAbsolute(inside);
 };
 
-const skillLinkTarget = (layout: ProjectLayout, linkPath: string, directory: string): string =>
-  isInsideProject(layout.root, directory) ? relative(dirname(linkPath), directory) : directory;
+const skillLinkTarget = (
+  layout: ProjectLayout,
+  linkPath: string,
+  directory: string,
+): string =>
+  isInsideProject(layout.root, directory)
+    ? relative(dirname(linkPath), directory)
+    : directory;
 
-const skillLink = (layout: ProjectLayout, baseDir: string, skill: ProjectSkillTarget): Link => {
+const skillLink = (
+  layout: ProjectLayout,
+  baseDir: string,
+  skill: ProjectSkillTarget,
+): Link => {
   const path = join(baseDir, skill.name);
   return { path, target: skillLinkTarget(layout, path, skill.directory) };
 };
@@ -77,7 +94,9 @@ export const buildProjectPlan = (
 ): VendorPlan => {
   const allDirectories = [layout.skills, ...layout.vendorSkillDirectories];
   return {
-    links: allDirectories.flatMap(dir => skills.map(skill => skillLink(layout, dir, skill))),
+    links: allDirectories.flatMap(dir =>
+      skills.map(skill => skillLink(layout, dir, skill)),
+    ),
     ownedDirectories: allDirectories,
   };
 };

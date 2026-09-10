@@ -93,9 +93,14 @@ export const buildVendorLayouts = (
   const layouts = {} as Record<VendorName, VendorLayout>;
   for (const name of VENDORS) {
     const spec: VendorSpec = VENDOR_SPECS[name];
-    const root = join(home, platform === "win32" ? spec.windowsRoot : spec.posixRoot);
+    const root = join(
+      home,
+      platform === "win32" ? spec.windowsRoot : spec.posixRoot,
+    );
     const resources =
-      spec.resourceSubdirectory === undefined ? root : join(root, spec.resourceSubdirectory);
+      spec.resourceSubdirectory === undefined
+        ? root
+        : join(root, spec.resourceSubdirectory);
     layouts[name] = {
       instruction: join(root, spec.instruction),
       skills: join(resources, SKILLS_DIRECTORY),

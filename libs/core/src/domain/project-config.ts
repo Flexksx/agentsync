@@ -1,4 +1,8 @@
-import { resolveSourcePaths, type SourceEntry, type VendorConfig } from "./config";
+import {
+  resolveSourcePaths,
+  type SourceEntry,
+  type VendorConfig,
+} from "./config";
 import { VENDORS, type VendorName } from "./vendor";
 
 export type ProjectConfig = {
@@ -8,16 +12,23 @@ export type ProjectConfig = {
 
 export type LockEntry = { readonly commit: string };
 
-export type ProjectLock = { readonly skills: Readonly<Record<string, LockEntry>> };
+export type ProjectLock = {
+  readonly skills: Readonly<Record<string, LockEntry>>;
+};
 
 export const PROJECT_CONFIG_FILE = "ponte.toml";
 
-export const getProjectEnabledVendors = (config: ProjectConfig): VendorName[] | undefined => {
+export const getProjectEnabledVendors = (
+  config: ProjectConfig,
+): VendorName[] | undefined => {
   if (config.vendors === undefined) return undefined;
   return VENDORS.filter(name => config.vendors?.[name]?.enabled === true);
 };
 
-export const resolveProjectConfigPaths = (config: ProjectConfig, root: string): ProjectConfig => ({
+export const resolveProjectConfigPaths = (
+  config: ProjectConfig,
+  root: string,
+): ProjectConfig => ({
   ...(config.vendors !== undefined && { vendors: config.vendors }),
   skills: resolveSourcePaths(config.skills, root),
 });

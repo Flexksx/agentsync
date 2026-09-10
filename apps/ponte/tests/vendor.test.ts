@@ -14,7 +14,9 @@ describe("buildVendorLayouts", () => {
 
   it("keeps opencode under the XDG config root and pi-agent under home", () => {
     const layouts = buildVendorLayouts("/home/u", "posix");
-    expect(layouts.opencode.instruction).toBe("/home/u/.config/opencode/AGENTS.md");
+    expect(layouts.opencode.instruction).toBe(
+      "/home/u/.config/opencode/AGENTS.md",
+    );
     expect(layouts["pi-agent"].skills).toBe("/home/u/.pi/agent/skills");
   });
 
@@ -23,7 +25,9 @@ describe("buildVendorLayouts", () => {
     expect(layouts["claude-code"].instruction).toBe(
       join("C:/Users/u", "AppData", "Roaming", "Claude", "CLAUDE.md"),
     );
-    expect(layouts["pi-agent"].instruction).toBe(join("C:/Users/u", ".pi", "agent", "AGENTS.md"));
+    expect(layouts["pi-agent"].instruction).toBe(
+      join("C:/Users/u", ".pi", "agent", "AGENTS.md"),
+    );
   });
 
   it("gives every vendor a distinct instruction file", () => {

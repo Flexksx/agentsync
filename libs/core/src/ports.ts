@@ -32,17 +32,29 @@ export type ProjectRepository = {
   readonly findProjectRoot: (start: string) => Promise<string | null>;
   readonly readProjectConfig: (root: string) => Promise<ProjectConfig>;
   readonly readProjectLock: (layout: ProjectLayout) => Promise<ProjectLock>;
-  readonly writeProjectLock: (layout: ProjectLayout, lock: ProjectLock) => Promise<void>;
+  readonly writeProjectLock: (
+    layout: ProjectLayout,
+    lock: ProjectLock,
+  ) => Promise<void>;
 };
 
 export type SourceResolver = {
-  readonly resolve: (source: SkillSource, cacheDirectory: string) => Promise<string>;
-  readonly resolveDetails: (source: SkillSource, cacheDirectory: string) => Promise<ResolvedSource>;
+  readonly resolve: (
+    source: SkillSource,
+    cacheDirectory: string,
+  ) => Promise<string>;
+  readonly resolveDetails: (
+    source: SkillSource,
+    cacheDirectory: string,
+  ) => Promise<ResolvedSource>;
 };
 
 export type LinkManager = {
   readonly readSymlinks: (plan: VendorPlan) => Promise<Map<string, string>>;
-  readonly applyPlan: (plan: VendorPlan, stale: readonly string[]) => Promise<void>;
+  readonly applyPlan: (
+    plan: VendorPlan,
+    stale: readonly string[],
+  ) => Promise<void>;
 };
 
 export type Environment = {

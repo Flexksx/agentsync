@@ -23,13 +23,18 @@ export const readPrompt = async (filename: string): Promise<string | null> => {
   return file.text();
 };
 
-export const writePrompt = async (filename: string, content: string): Promise<void> => {
+export const writePrompt = async (
+  filename: string,
+  content: string,
+): Promise<void> => {
   const path = promptFilePath(filename);
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, content);
 };
 
-export const resolveContent = async (fileOrLiteral: string): Promise<string> => {
+export const resolveContent = async (
+  fileOrLiteral: string,
+): Promise<string> => {
   const file = Bun.file(fileOrLiteral);
   if (await file.exists()) return file.text();
   return fileOrLiteral;

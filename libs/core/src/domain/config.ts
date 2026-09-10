@@ -21,7 +21,9 @@ export const DEFAULT_SYSTEM_PROMPT_FILE = "AGENTS.md";
 
 export const createDefaultConfig = (): Config => ({
   systemPromptFile: DEFAULT_SYSTEM_PROMPT_FILE,
-  vendors: Object.fromEntries(VENDORS.map(vendor => [vendor, { enabled: true }])),
+  vendors: Object.fromEntries(
+    VENDORS.map(vendor => [vendor, { enabled: true }]),
+  ),
   skills: {},
   subagents: {},
 });
@@ -29,7 +31,10 @@ export const createDefaultConfig = (): Config => ({
 export const getEnabledVendors = (config: Config): VendorName[] =>
   VENDORS.filter(vendor => config.vendors[vendor]?.enabled === true);
 
-const withAbsoluteSource = (entry: SourceEntry, configDirectory: string): SourceEntry =>
+const withAbsoluteSource = (
+  entry: SourceEntry,
+  configDirectory: string,
+): SourceEntry =>
   isGitSource(entry.source) || isAbsolute(entry.source)
     ? entry
     : { ...entry, source: join(configDirectory, entry.source) };
@@ -45,7 +50,10 @@ export const resolveSourcePaths = (
     ]),
   );
 
-export const resolveConfigPaths = (config: Config, configDirectory: string): Config => ({
+export const resolveConfigPaths = (
+  config: Config,
+  configDirectory: string,
+): Config => ({
   ...config,
   skills: resolveSourcePaths(config.skills, configDirectory),
   subagents: resolveSourcePaths(config.subagents, configDirectory),

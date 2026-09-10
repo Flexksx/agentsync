@@ -53,14 +53,17 @@ const write = (line: string): void => process.stdout.write(line);
 
 const getConfig = async (): Promise<Config> => {
   const config = await findConfig();
-  if (config === null) throw new Error("config not initialized - run `ponte sync` first");
+  if (config === null)
+    throw new Error("config not initialized - run `ponte sync` first");
   return config;
 };
 
 const getProject = async (): Promise<Project> => {
   const project = await findProject();
   if (project === null) {
-    throw new Error(`no ${PROJECT_CONFIG_FILE} in this directory or any parent directory`);
+    throw new Error(
+      `no ${PROJECT_CONFIG_FILE} in this directory or any parent directory`,
+    );
   }
   return project;
 };
@@ -83,10 +86,14 @@ const printProjectSync = (report: ProjectSyncReport, dryRun: boolean): void => {
   write(`${verb} ${chalk.cyan(report.root)}\n`);
   if (report.vendored > 0) {
     const action = dryRun ? "would be vendored into" : "vendored into";
-    write(`${report.vendored} skill(s) ${action} ${chalk.cyan(PROJECT_SOURCES_DIRECTORY)}\n`);
+    write(
+      `${report.vendored} skill(s) ${action} ${chalk.cyan(PROJECT_SOURCES_DIRECTORY)}\n`,
+    );
   }
   const linked = dryRun ? "Would link" : "Linked";
-  write(`${linked} ${report.linked} skill(s) into ${chalk.cyan(PROJECT_SKILLS_DIRECTORY)}\n`);
+  write(
+    `${linked} ${report.linked} skill(s) into ${chalk.cyan(PROJECT_SKILLS_DIRECTORY)}\n`,
+  );
   printStale(report.stale, dryRun);
 };
 
@@ -100,7 +107,8 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
     },
     allowPositionals: true,
   });
-  if (positionals.length > 0) throw new Error(`unexpected argument for sync: ${positionals[0]}`);
+  if (positionals.length > 0)
+    throw new Error(`unexpected argument for sync: ${positionals[0]}`);
 
   const override = values["global-instructions"];
   const agents = values.agents;
@@ -109,7 +117,9 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
   const project = await findProject();
   if (project !== null) {
     if (typeof override === "string" || Array.isArray(agents)) {
-      throw new Error("-g and -a apply to a global sync only, and this directory is a project");
+      throw new Error(
+        "-g and -a apply to a global sync only, and this directory is a project",
+      );
     }
     printProjectSync(await syncProject(project, !dryRun), dryRun);
     return;
@@ -129,7 +139,10 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
 
 const printStatus = (report: StatusReport): void => {
   write(`System prompt: ${chalk.cyan(report.promptFile)}\n\n`);
-  const width = Math.max("VENDOR".length, ...report.vendors.map(vendor => vendor.name.length));
+  const width = Math.max(
+    "VENDOR".length,
+    ...report.vendors.map(vendor => vendor.name.length),
+  );
   write(
     `${chalk.bold(
       `${"VENDOR".padEnd(width)}  ${"ENABLED".padEnd(FLAG_COLUMN)}  ${"LINKS".padEnd(LINKS_COLUMN)}  STATE`,
@@ -152,12 +165,16 @@ const printStatus = (report: StatusReport): void => {
 const printProjectStatus = (report: ProjectStatusReport): void => {
   write(`Project: ${chalk.cyan(report.root)}\n`);
   write(`Skills:  ${chalk.cyan(report.skillsDirectory)}\n\n`);
-  const links = report.linkCount === 0 ? chalk.dim("0") : chalk.cyan(String(report.linkCount));
+  const links =
+    report.linkCount === 0
+      ? chalk.dim("0")
+      : chalk.cyan(String(report.linkCount));
   write(`${links} link(s) - ${STATE_STYLES[report.state](report.state)}\n`);
 };
 
 const runStatusCommand = async (args: string[]): Promise<void> => {
-  if (args.length > 0) throw new Error(`unexpected argument for status: ${args[0]}`);
+  if (args.length > 0)
+    throw new Error(`unexpected argument for status: ${args[0]}`);
   const project = await findProject();
   if (project !== null) {
     printProjectStatus(await getProjectStatusReport(project));
@@ -184,7 +201,9 @@ const printEntries = (noun: "skills" | "subagents", config: Config): void => {
   const width = Math.max(4, ...rows.map(row => row.name.length));
   write(`${chalk.bold(`${"NAME".padEnd(width)}  TYPE  SOURCE`)}\n`);
   for (const row of rows) {
-    write(`${row.name.padEnd(width)}  ${chalk.dim(row.type.padEnd(TYPE_COLUMN))}  ${row.source}\n`);
+    write(
+      `${row.name.padEnd(width)}  ${chalk.dim(row.type.padEnd(TYPE_COLUMN))}  ${row.source}\n`,
+    );
   }
 };
 
@@ -201,8 +220,11 @@ const printProjectSkills = (rows: readonly ProjectSkillRow[]): void => {
   );
   for (const row of rows) {
     const kind = row.vendored ? "vendored" : "local";
-    const commit = row.commit === null ? NO_VALUE : formatShortCommit(row.commit);
-    const source = describeSource(parseSource(row.entry.source, row.entry.ref, row.entry.subdir));
+    const commit =
+      row.commit === null ? NO_VALUE : formatShortCommit(row.commit);
+    const source = describeSource(
+      parseSource(row.entry.source, row.entry.ref, row.entry.subdir),
+    );
     write(
       `${row.name.padEnd(width)}  ${chalk.dim(kind.padEnd(KIND_COLUMN))}  ${chalk.dim(commit.padEnd(COMMIT_COLUMN))}  ${source}\n`,
     );
@@ -210,7 +232,8 @@ const printProjectSkills = (rows: readonly ProjectSkillRow[]): void => {
 };
 
 const runSkillsCommand = async (args: string[]): Promise<void> => {
-  if (args.length > 0) throw new Error(`unexpected argument for skills: ${args[0]}`);
+  if (args.length > 0)
+    throw new Error(`unexpected argument for skills: ${args[0]}`);
   const project = await findProject();
   if (project !== null) {
     printProjectSkills(await listProjectSkills(project));
@@ -227,24 +250,33 @@ const runUpdateCommand = async (args: string[]): Promise<void> => {
     options: { force: { type: "boolean" } },
     allowPositionals: true,
   });
-  if (positionals.length > 1) throw new Error(`unexpected argument for update: ${positionals[1]}`);
+  if (positionals.length > 1)
+    throw new Error(`unexpected argument for update: ${positionals[1]}`);
   const project = await getProject();
   if (project === null) return;
-  const result = await runProjectUpdate(project, positionals[0], values.force === true);
+  const result = await runProjectUpdate(
+    project,
+    positionals[0],
+    values.force === true,
+  );
   if (!result.ok) throw new Error(result.error);
   if (result.value.updated.length === 0) {
     write("No vendored skills to update.\n");
     return;
   }
-  write(`Updated ${result.value.updated.length} skill(s) in ${chalk.cyan(result.value.root)}\n`);
+  write(
+    `Updated ${result.value.updated.length} skill(s) in ${chalk.cyan(result.value.root)}\n`,
+  );
   for (const skill of result.value.updated) {
-    const commit = skill.commit === null ? NO_VALUE : formatShortCommit(skill.commit);
+    const commit =
+      skill.commit === null ? NO_VALUE : formatShortCommit(skill.commit);
     write(`  ${skill.name} -> ${chalk.dim(commit)}\n`);
   }
 };
 
 const runSubagentsCommand = async (args: string[]): Promise<void> => {
-  if (args.length > 0) throw new Error(`unexpected argument for subagents: ${args[0]}`);
+  if (args.length > 0)
+    throw new Error(`unexpected argument for subagents: ${args[0]}`);
   const config = await getConfig();
   if (config === null) return;
   printEntries("subagents", config);
@@ -267,7 +299,9 @@ const runSyspromptCommand = async (args: string[]): Promise<void> => {
   }
   const prompt = await readSystemPrompt(config);
   if (prompt === null) {
-    throw new Error("No system prompt set. Use `ponte sysprompt set <file-or-string>`.");
+    throw new Error(
+      "No system prompt set. Use `ponte sysprompt set <file-or-string>`.",
+    );
   }
   write(prompt);
 };
@@ -279,17 +313,20 @@ const runManualCommand = async (): Promise<void> => {
 const commandTable = (): readonly Command[] => [
   {
     name: "sync",
-    summary: "Link the system prompt, skills, and subagents into configured vendors",
+    summary:
+      "Link the system prompt, skills, and subagents into configured vendors",
     run: runSyncCommand,
   },
   {
     name: "status",
-    summary: "Show which vendors are linked and whether the links match the config",
+    summary:
+      "Show which vendors are linked and whether the links match the config",
     run: runStatusCommand,
   },
   {
     name: "skills",
-    summary: "List the declared skills, from ponte.toml in a project or from config.toml",
+    summary:
+      "List the declared skills, from ponte.toml in a project or from config.toml",
     run: runSkillsCommand,
   },
   {
@@ -338,7 +375,9 @@ export const run = async (argv: string[]): Promise<number> => {
     printUsage();
     return 0;
   }
-  const command = commandTable().find(candidate => candidate.name === commandName);
+  const command = commandTable().find(
+    candidate => candidate.name === commandName,
+  );
   if (command === undefined) {
     process.stderr.write(`${chalk.red(`unknown command: ${commandName}`)}\n`);
     return 2;

@@ -13,7 +13,11 @@ import {
 import { readConfig, writeConfig, writePrompt } from "../infra/config-file";
 import { fileExists, writeText } from "../infra/filesystem";
 import { applyPlan, readSymlinks } from "../infra/links";
-import { configDirectoryPath, overridePromptPath, promptFilePath } from "../infra/paths";
+import {
+  configDirectoryPath,
+  overridePromptPath,
+  promptFilePath,
+} from "../infra/paths";
 import { buildVendorPlans } from "./resolve";
 
 export type SyncRequest = {
@@ -41,7 +45,10 @@ type PendingSync = {
 
 export const findConfig = (): Promise<Config | null> => readConfig();
 
-const bootstrapConfig = async (): Promise<{ config: Config; bootstrap: Bootstrap }> => {
+const bootstrapConfig = async (): Promise<{
+  config: Config;
+  bootstrap: Bootstrap;
+}> => {
   const config = createDefaultConfig();
   await writeConfig(config);
   await writePrompt(config.systemPromptFile, "");
@@ -54,7 +61,9 @@ const bootstrapConfig = async (): Promise<{ config: Config; bootstrap: Bootstrap
   };
 };
 
-const configuredPromptPath = async (config: Config): Promise<Result<string, string>> => {
+const configuredPromptPath = async (
+  config: Config,
+): Promise<Result<string, string>> => {
   const path = promptFilePath(config.systemPromptFile);
   if (!(await fileExists(path))) {
     return err(`system prompt not found: ${config.systemPromptFile}`);
@@ -69,10 +78,14 @@ const materializedOverridePath = async (override: string): Promise<string> => {
   return path;
 };
 
-const pendingSync = async (request: SyncRequest): Promise<Result<PendingSync, string>> => {
+const pendingSync = async (
+  request: SyncRequest,
+): Promise<Result<PendingSync, string>> => {
   const existing = await readConfig();
   const { config, bootstrap } =
-    existing === null ? await bootstrapConfig() : { config: existing, bootstrap: null };
+    existing === null
+      ? await bootstrapConfig()
+      : { config: existing, bootstrap: null };
 
   const vendors =
     request.requestedVendors.length > 0
@@ -91,13 +104,19 @@ const pendingSync = async (request: SyncRequest): Promise<Result<PendingSync, st
   const plans = await buildVendorPlans(config, promptResult.value);
   const stale: Record<string, readonly string[]> = {};
   for (const vendor of vendors) {
-    stale[vendor] = getStaleLinkPaths(plans[vendor], await readSymlinks(plans[vendor]));
+    stale[vendor] = getStaleLinkPaths(
+      plans[vendor],
+      await readSymlinks(plans[vendor]),
+    );
   }
   return ok({ vendors, plans, stale, bootstrap });
 };
 
 const countStale = (pending: PendingSync): number =>
-  pending.vendors.reduce((total, vendor) => total + (pending.stale[vendor]?.length ?? 0), 0);
+  pending.vendors.reduce(
+    (total, vendor) => total + (pending.stale[vendor]?.length ?? 0),
+    0,
+  );
 
 export const syncVendors = async (
   request: SyncRequest,
@@ -111,5 +130,9 @@ export const syncVendors = async (
       await applyPlan(pending.plans[vendor], pending.stale[vendor] ?? []);
     }
   }
-  return ok({ vendors: pending.vendors, stale: countStale(pending), bootstrap: pending.bootstrap });
+  return ok({
+    vendors: pending.vendors,
+    stale: countStale(pending),
+    bootstrap: pending.bootstrap,
+  });
 };
