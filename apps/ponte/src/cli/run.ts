@@ -28,6 +28,12 @@ import { planSync, runSync, type SyncReport } from "../app/sync";
 import { readSystemPrompt, setSystemPrompt } from "../app/sysprompt";
 import manualText from "./manual.md" with { type: "text" };
 
+type Command = {
+  readonly name: string;
+  readonly summary: string;
+  readonly run: (args: string[]) => Promise<void>;
+};
+
 const FLAG_COLUMN = 7;
 const LINKS_COLUMN = 5;
 const TYPE_COLUMN = 5;
@@ -42,12 +48,6 @@ const STATE_STYLES: Record<VendorState, (text: string) => string> = {
   drifted: chalk.yellow,
   "not synced": chalk.red,
   disabled: chalk.dim,
-};
-
-type Command = {
-  readonly name: string;
-  readonly summary: string;
-  readonly run: (args: string[]) => Promise<void>;
 };
 
 const write = (line: string): void => process.stdout.write(line);

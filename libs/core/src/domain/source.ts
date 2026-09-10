@@ -1,5 +1,3 @@
-const GIT_SOURCE = /^(https?:\/\/|git@|file:\/\/)/;
-
 export type SkillSource =
   | { readonly type: "local"; readonly path: string }
   | { readonly type: "git"; readonly url: string; readonly ref: string; readonly subdir?: string };
@@ -9,6 +7,8 @@ export class MissingGitRefError extends Error {
     super(`git source ${url} needs a ref`);
   }
 }
+
+const GIT_SOURCE = /^(https?:\/\/|git@|file:\/\/)/;
 
 export const isGitSource = (source: string): boolean => GIT_SOURCE.test(source);
 

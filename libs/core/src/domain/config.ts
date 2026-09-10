@@ -2,8 +2,6 @@ import { isAbsolute, join } from "node:path";
 import { isGitSource } from "./source";
 import { VENDORS, type VendorName } from "./vendor";
 
-export const DEFAULT_SYSTEM_PROMPT_FILE = "AGENTS.md";
-
 export type VendorConfig = { readonly enabled: boolean };
 
 export type SourceEntry = {
@@ -18,6 +16,8 @@ export type Config = {
   readonly skills: Readonly<Record<string, SourceEntry>>;
   readonly subagents: Readonly<Record<string, SourceEntry>>;
 };
+
+export const DEFAULT_SYSTEM_PROMPT_FILE = "AGENTS.md";
 
 export const defaultConfig = (): Config => ({
   systemPromptFile: DEFAULT_SYSTEM_PROMPT_FILE,
