@@ -2,62 +2,62 @@ import {
   buildVendorLayouts,
   buildVendorPlan,
   type Config,
+  type ListFiles,
+  type Platform,
   parseSource,
   type ResolvedEntry,
+  type ResolveSource,
   type SourceEntry,
   type VendorName,
   type VendorPlan,
 } from "@ponte/core";
-import { listFiles } from "../infra/filesystem";
-import { resolveSource } from "../infra/git";
-import {
-  currentPlatform,
-  gitCacheDirectoryPath,
-  homeDirectory,
-} from "../infra/paths";
 
-const resolveDirectory = (entry: SourceEntry): Promise<string> =>
-  resolveSource(
-    parseSource(entry.source, entry.ref, entry.subdir),
-    gitCacheDirectoryPath(),
-  );
-
-const resolveSkills = (
-  entries: Readonly<Record<string, SourceEntry>>,
-): Promise<ResolvedEntry[]> =>
-  Promise.all(
-    Object.entries(entries).map(async ([name, entry]) => ({
-      name,
-      sourceDirectory: await resolveDirectory(entry),
-      files: [],
-    })),
-  );
-
-const resolveSubagents = (
-  entries: Readonly<Record<string, SourceEntry>>,
-): Promise<ResolvedEntry[]> =>
-  Promise.all(
-    Object.entries(entries).map(async ([name, entry]) => {
-      const sourceDirectory = await resolveDirectory(entry);
-      return { name, sourceDirectory, files: await listFiles(sourceDirectory) };
-    }),
-  );
-
-export const buildVendorPlans = async (
+export type BuildVendorPlans = (
   config: Config,
   promptPath: string,
-): Promise<Record<VendorName, VendorPlan>> => {
-  const skills = await resolveSkills(config.skills);
-  const subagents = await resolveSubagents(config.subagents);
-  const layouts = buildVendorLayouts(homeDirectory(), currentPlatform());
-  const plans = {} as Record<VendorName, VendorPlan>;
-  for (const [name, layout] of Object.entries(layouts)) {
-    plans[name as VendorName] = buildVendorPlan(
-      layout,
-      promptPath,
-      skills,
-      subagents,
+) => Promise<Record<VendorName, VendorPlan>>;
+
+export const createBuildVendorPlans =
+  (
+    resolveSource: ResolveSource,
+    listFiles: ListFiles,
+    home: string,
+    platform: Platform,
+  ): BuildVendorPlans =>
+  async (config, promptPath) => {
+    const resolveDirectory = (entry: SourceEntry): Promise<string> =>
+      resolveSource(parseSource(entry.source, entry.ref, entry.subdir));
+
+    const skills = await Promise.all(
+      Object.entries(config.skills).map(
+        async ([name, entry]): Promise<ResolvedEntry> => ({
+          name,
+          sourceDirectory: await resolveDirectory(entry),
+          files: [],
+        }),
+      ),
     );
-  }
-  return plans;
-};
+
+    const subagents = await Promise.all(
+      Object.entries(config.subagents).map(async ([name, entry]) => {
+        const sourceDirectory = await resolveDirectory(entry);
+        return {
+          name,
+          sourceDirectory,
+          files: await listFiles(sourceDirectory),
+        };
+      }),
+    );
+
+    const layouts = buildVendorLayouts(home, platform);
+    const plans = {} as Record<VendorName, VendorPlan>;
+    for (const [name, layout] of Object.entries(layouts)) {
+      plans[name as VendorName] = buildVendorPlan(
+        layout,
+        promptPath,
+        skills,
+        subagents,
+      );
+    }
+    return plans;
+  };

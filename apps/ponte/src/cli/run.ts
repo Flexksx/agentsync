@@ -12,19 +12,15 @@ import {
   type VendorState,
 } from "@ponte/core";
 import chalk from "chalk";
-import {
-  findProject,
-  getProjectStatusReport,
-  listProjectSkills,
-  type Project,
-  type ProjectSkillRow,
-  type ProjectStatusReport,
+import { type App, bootstrap } from "../app/bootstrap";
+import type {
+  Project,
+  ProjectSkillRow,
+  ProjectStatusReport,
 } from "../app/project";
-import { type ProjectSyncReport, syncProject } from "../app/project-sync";
-import { runProjectUpdate } from "../app/project-update";
-import { getStatusReport, type StatusReport } from "../app/status";
-import { findConfig, type SyncReport, syncVendors } from "../app/sync";
-import { readSystemPrompt, setSystemPrompt } from "../app/sysprompt";
+import type { ProjectSyncReport } from "../app/project-sync";
+import type { StatusReport } from "../app/status";
+import type { SyncReport } from "../app/sync";
 import manualText from "./manual.md" with { type: "text" };
 
 type Command = {
@@ -51,15 +47,15 @@ const STATE_STYLES: Record<VendorState, (text: string) => string> = {
 
 const write = (line: string): void => process.stdout.write(line);
 
-const getConfig = async (): Promise<Config> => {
-  const config = await findConfig();
+const getConfig = async (app: App): Promise<Config> => {
+  const config = await app.readConfig();
   if (config === null)
     throw new Error("config not initialized - run `ponte sync` first");
   return config;
 };
 
-const getProject = async (): Promise<Project> => {
-  const project = await findProject();
+const getProject = async (app: App): Promise<Project> => {
+  const project = await app.findProject();
   if (project === null) {
     throw new Error(
       `no ${PROJECT_CONFIG_FILE} in this directory or any parent directory`,
@@ -97,7 +93,7 @@ const printProjectSync = (report: ProjectSyncReport, dryRun: boolean): void => {
   printStale(report.stale, dryRun);
 };
 
-const runSyncCommand = async (args: string[]): Promise<void> => {
+const runSyncCommand = async (app: App, args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
     options: {
@@ -114,14 +110,14 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
   const agents = values.agents;
   const dryRun = values["dry-run"] === true;
 
-  const project = await findProject();
+  const project = await app.findProject();
   if (project !== null) {
     if (typeof override === "string" || Array.isArray(agents)) {
       throw new Error(
         "-g and -a apply to a global sync only, and this directory is a project",
       );
     }
-    printProjectSync(await syncProject(project, !dryRun), dryRun);
+    printProjectSync(await app.syncProject(project, !dryRun), dryRun);
     return;
   }
 
@@ -129,7 +125,7 @@ const runSyncCommand = async (args: string[]): Promise<void> => {
     promptOverride: typeof override === "string" ? override : undefined,
     requestedVendors: Array.isArray(agents) ? agents : [],
   };
-  const result = await syncVendors(request, !dryRun);
+  const result = await app.syncVendors(request, !dryRun);
   if (!result.ok) throw new Error(result.error);
   printBootstrap(result.value);
   const verb = dryRun ? "Dry run - would link" : "Linked";
@@ -172,17 +168,17 @@ const printProjectStatus = (report: ProjectStatusReport): void => {
   write(`${links} link(s) - ${STATE_STYLES[report.state](report.state)}\n`);
 };
 
-const runStatusCommand = async (args: string[]): Promise<void> => {
+const runStatusCommand = async (app: App, args: string[]): Promise<void> => {
   if (args.length > 0)
     throw new Error(`unexpected argument for status: ${args[0]}`);
-  const project = await findProject();
+  const project = await app.findProject();
   if (project !== null) {
-    printProjectStatus(await getProjectStatusReport(project));
+    printProjectStatus(await app.getProjectStatusReport(project));
     return;
   }
-  const config = await getConfig();
+  const config = await getConfig(app);
   if (config === null) return;
-  const result = await getStatusReport(config);
+  const result = await app.getStatusReport(config);
   if (!result.ok) throw new Error(result.error);
   printStatus(result.value);
 };
@@ -231,20 +227,20 @@ const printProjectSkills = (rows: readonly ProjectSkillRow[]): void => {
   }
 };
 
-const runSkillsCommand = async (args: string[]): Promise<void> => {
+const runSkillsCommand = async (app: App, args: string[]): Promise<void> => {
   if (args.length > 0)
     throw new Error(`unexpected argument for skills: ${args[0]}`);
-  const project = await findProject();
+  const project = await app.findProject();
   if (project !== null) {
-    printProjectSkills(await listProjectSkills(project));
+    printProjectSkills(await app.listProjectSkills(project));
     return;
   }
-  const config = await getConfig();
+  const config = await getConfig(app);
   if (config === null) return;
   printEntries("skills", config);
 };
 
-const runUpdateCommand = async (args: string[]): Promise<void> => {
+const runUpdateCommand = async (app: App, args: string[]): Promise<void> => {
   const { values, positionals } = parseArgs({
     args,
     options: { force: { type: "boolean" } },
@@ -252,9 +248,9 @@ const runUpdateCommand = async (args: string[]): Promise<void> => {
   });
   if (positionals.length > 1)
     throw new Error(`unexpected argument for update: ${positionals[1]}`);
-  const project = await getProject();
+  const project = await getProject(app);
   if (project === null) return;
-  const result = await runProjectUpdate(
+  const result = await app.runProjectUpdate(
     project,
     positionals[0],
     values.force === true,
@@ -274,30 +270,30 @@ const runUpdateCommand = async (args: string[]): Promise<void> => {
   }
 };
 
-const runSubagentsCommand = async (args: string[]): Promise<void> => {
+const runSubagentsCommand = async (app: App, args: string[]): Promise<void> => {
   if (args.length > 0)
     throw new Error(`unexpected argument for subagents: ${args[0]}`);
-  const config = await getConfig();
+  const config = await getConfig(app);
   if (config === null) return;
   printEntries("subagents", config);
 };
 
-const runSyspromptCommand = async (args: string[]): Promise<void> => {
+const runSyspromptCommand = async (app: App, args: string[]): Promise<void> => {
   const [subcommand, argument] = args;
-  const config = await getConfig();
+  const config = await getConfig(app);
   if (config === null) return;
   if (subcommand === "set") {
     if (argument === undefined) {
       throw new Error("missing argument for sysprompt set <file-or-string>");
     }
-    await setSystemPrompt(config, argument);
+    await app.setSystemPrompt(config, argument);
     write("System prompt updated.\n");
     return;
   }
   if (subcommand !== undefined) {
     throw new Error(`unknown subcommand for sysprompt: ${subcommand}`);
   }
-  const prompt = await readSystemPrompt(config);
+  const prompt = await app.readSystemPrompt(config);
   if (prompt === null) {
     throw new Error(
       "No system prompt set. Use `ponte sysprompt set <file-or-string>`.",
@@ -310,39 +306,39 @@ const runManualCommand = async (): Promise<void> => {
   write(manualText);
 };
 
-const commandTable = (): readonly Command[] => [
+const commandTable = (app: App): readonly Command[] => [
   {
     name: "sync",
     summary:
       "Link the system prompt, skills, and subagents into configured vendors",
-    run: runSyncCommand,
+    run: args => runSyncCommand(app, args),
   },
   {
     name: "status",
     summary:
       "Show which vendors are linked and whether the links match the config",
-    run: runStatusCommand,
+    run: args => runStatusCommand(app, args),
   },
   {
     name: "skills",
     summary:
       "List the declared skills, from ponte.toml in a project or from config.toml",
-    run: runSkillsCommand,
+    run: args => runSkillsCommand(app, args),
   },
   {
     name: "update",
     summary: "Re-vendor project skills from their sources (project mode only)",
-    run: runUpdateCommand,
+    run: args => runUpdateCommand(app, args),
   },
   {
     name: "subagents",
     summary: "List the subagents declared in config.toml",
-    run: runSubagentsCommand,
+    run: args => runSubagentsCommand(app, args),
   },
   {
     name: "sysprompt",
     summary: "Show or manage the global system prompt",
-    run: runSyspromptCommand,
+    run: args => runSyspromptCommand(app, args),
   },
   {
     name: "manual",
@@ -351,9 +347,8 @@ const commandTable = (): readonly Command[] => [
   },
 ];
 
-const printUsage = (): void => {
-  const commands = commandTable();
-  const width = Math.max(...commands.map(command => command.name.length));
+const printUsage = (commands: readonly Command[]): void => {
+  const width = Math.max(...commands.map(c => c.name.length));
   write(`Usage: ${chalk.bold("ponte")} <command>\n\n`);
   write(`${chalk.bold("Commands:")}\n`);
   for (const command of commands) {
@@ -371,13 +366,16 @@ const formatError = (error: unknown): string =>
 export const run = async (argv: string[]): Promise<number> => {
   disableColorIfRequested();
   const [commandName, ...args] = argv;
+
+  const app = bootstrap();
+  const commands = commandTable(app);
+
   if (commandName === undefined || HELP_FLAGS.has(commandName)) {
-    printUsage();
+    printUsage(commands);
     return 0;
   }
-  const command = commandTable().find(
-    candidate => candidate.name === commandName,
-  );
+
+  const command = commands.find(candidate => candidate.name === commandName);
   if (command === undefined) {
     process.stderr.write(`${chalk.red(`unknown command: ${commandName}`)}\n`);
     return 2;

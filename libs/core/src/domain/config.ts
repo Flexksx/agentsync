@@ -58,3 +58,9 @@ export const resolveConfigPaths = (
   skills: resolveSourcePaths(config.skills, configDirectory),
   subagents: resolveSourcePaths(config.subagents, configDirectory),
 });
+
+export const resolvePromptPath = (
+  configDirectory: string,
+  filename: string,
+): string =>
+  isAbsolute(filename) ? filename : join(configDirectory, filename);
