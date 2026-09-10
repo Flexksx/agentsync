@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { mkdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { MissingGitRefError, type SkillSource } from "@ponte/core";
 import { $ } from "bun";
-import { MissingGitRefError, type SkillSource } from "../domain/source";
 
 const CLONE_DIRECTORY_LENGTH = 16;
 

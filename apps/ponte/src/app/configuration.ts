@@ -1,4 +1,4 @@
-import type { Config } from "../domain/config";
+import type { Config } from "@ponte/core";
 import { readConfig } from "../infra/config-file";
 
 export class ConfigNotInitializedError extends Error {

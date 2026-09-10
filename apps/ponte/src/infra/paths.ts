@@ -1,5 +1,5 @@
 import { isAbsolute, join } from "node:path";
-import type { Platform } from "../domain/vendor";
+import type { Platform } from "@ponte/core";
 
 const CONFIG_FILE = "config.toml";
 

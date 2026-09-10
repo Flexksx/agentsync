@@ -1,5 +1,4 @@
-import { classifyVendor, type VendorState } from "../domain/link";
-import { VENDORS, type VendorName } from "../domain/vendor";
+import { classifyVendor, VENDORS, type VendorName, type VendorState } from "@ponte/core";
 import { fileExists } from "../infra/filesystem";
 import { readSymlinks } from "../infra/links";
 import { promptFilePath } from "../infra/paths";

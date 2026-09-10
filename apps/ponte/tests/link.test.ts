@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { classifyVendor, planVendor, staleLinkPaths } from "../src/domain/link";
+import { classifyVendor, planVendor, staleLinkPaths } from "@ponte/core";
 
 const layout = {
   instruction: "/home/u/.claude/CLAUDE.md",

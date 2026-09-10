@@ -64,7 +64,7 @@ const checkFile = async (file: string): Promise<Violation[]> => {
 
 const sourceFiles = async (root: string): Promise<string[]> =>
   (await readdir(root, { recursive: true }))
-    .filter(name => name.endsWith(".ts"))
+    .filter(name => name.endsWith(".ts") && !name.endsWith(".d.ts"))
     .map(name => join(root, name))
     .sort();
 

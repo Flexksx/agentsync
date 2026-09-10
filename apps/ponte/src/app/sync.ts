@@ -1,6 +1,12 @@
-import { type Config, defaultConfig, enabledVendors } from "../domain/config";
-import { staleLinkPaths, type VendorPlan } from "../domain/link";
-import { parseVendorNames, type VendorName } from "../domain/vendor";
+import {
+  type Config,
+  defaultConfig,
+  enabledVendors,
+  parseVendorNames,
+  staleLinkPaths,
+  type VendorName,
+  type VendorPlan,
+} from "@ponte/core";
 import { readConfig, writeConfig, writePrompt } from "../infra/config-file";
 import { fileExists, writeText } from "../infra/filesystem";
 import { applyPlan, readSymlinks } from "../infra/links";

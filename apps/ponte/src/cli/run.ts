@@ -1,4 +1,15 @@
 import { parseArgs } from "node:util";
+import {
+  type Config,
+  describeSource,
+  isGitSource,
+  PROJECT_SKILLS_DIRECTORY,
+  PROJECT_SOURCES_DIRECTORY,
+  parseSource,
+  type SourceEntry,
+  shortCommit,
+  type VendorState,
+} from "@ponte/core";
 import chalk from "chalk";
 import { requireConfig } from "../app/configuration";
 import {
@@ -15,14 +26,6 @@ import { runProjectUpdate } from "../app/project-update";
 import { readStatus, type StatusReport } from "../app/status";
 import { planSync, runSync, type SyncReport } from "../app/sync";
 import { readSystemPrompt, setSystemPrompt } from "../app/sysprompt";
-import type { Config, SourceEntry } from "../domain/config";
-import type { VendorState } from "../domain/link";
-import {
-  PROJECT_SKILLS_DIRECTORY,
-  PROJECT_SOURCES_DIRECTORY,
-  shortCommit,
-} from "../domain/project";
-import { describeSource, isGitSource, parseSource } from "../domain/source";
 import manualText from "./manual.md" with { type: "text" };
 
 const FLAG_COLUMN = 7;

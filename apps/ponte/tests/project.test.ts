@@ -6,9 +6,9 @@ import {
   projectEnabledVendors,
   projectLayout,
   shortCommit,
+  VENDORS,
   vendoredSkillPath,
-} from "../src/domain/project";
-import { VENDORS } from "../src/domain/vendor";
+} from "@ponte/core";
 import {
   ConfigError,
   decodeLock,

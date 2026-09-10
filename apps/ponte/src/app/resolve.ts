@@ -1,7 +1,13 @@
-import type { Config, SourceEntry } from "../domain/config";
-import { planVendor, type ResolvedEntry, type VendorPlan } from "../domain/link";
-import { parseSource } from "../domain/source";
-import { type VendorName, vendorLayouts } from "../domain/vendor";
+import {
+  type Config,
+  parseSource,
+  planVendor,
+  type ResolvedEntry,
+  type SourceEntry,
+  type VendorName,
+  type VendorPlan,
+  vendorLayouts,
+} from "@ponte/core";
 import { listFiles } from "../infra/filesystem";
 import { resolveSource } from "../infra/git";
 import { currentPlatform, gitCacheDirectoryPath, homeDirectory } from "../infra/paths";

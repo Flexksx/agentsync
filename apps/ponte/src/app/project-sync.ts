@@ -1,4 +1,4 @@
-import { staleLinkPaths } from "../domain/link";
+import { staleLinkPaths } from "@ponte/core";
 import { applyPlan, readSymlinks } from "../infra/links";
 import { writeProjectLock } from "../infra/project-file";
 import { type Project, resolveProject } from "./project";

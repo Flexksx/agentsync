@@ -7,7 +7,7 @@ import {
   type ProjectConfig,
   type ProjectLayout,
   type ProjectLock,
-} from "../domain/project";
+} from "@ponte/core";
 import { decodeLock, decodeProjectConfig, encodeLock } from "./config-codec";
 
 export const findProjectRoot = async (start: string): Promise<string | null> => {

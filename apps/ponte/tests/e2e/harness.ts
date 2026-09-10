@@ -1,8 +1,8 @@
 import { mkdir, readFile, readlink, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir as osTmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import type { VendorName } from "@ponte/core";
 import { $ } from "bun";
-import type { VendorName } from "../../src/domain/vendor";
 
 let binaryUnderTest = "";
 let binaryResolve: Promise<string> | null = null;

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { type Config, normalizeConfig, type SourceEntry } from "../src/domain/config";
-import { isGitSource, parseSource } from "../src/domain/source";
+import {
+  type Config,
+  isGitSource,
+  normalizeConfig,
+  parseSource,
+  type SourceEntry,
+} from "@ponte/core";
 import { ConfigError, decodeConfig } from "../src/infra/config-codec";
 
 const cfgWith = (skills: Record<string, SourceEntry> = {}) =>

@@ -1,17 +1,20 @@
-import type { SourceEntry } from "../domain/config";
-import { classifyVendor, type VendorPlan, type VendorState } from "../domain/link";
 import {
+  classifyVendor,
+  isGitSource,
   type LockEntry,
   PROJECT_CONFIG_FILE,
   type ProjectConfig,
   type ProjectLayout,
   type ProjectLock,
+  parseSource,
   planProject,
   projectEnabledVendors,
   projectLayout,
+  type SourceEntry,
+  type VendorPlan,
+  type VendorState,
   vendoredSkillPath,
-} from "../domain/project";
-import { isGitSource, parseSource } from "../domain/source";
+} from "@ponte/core";
 import { copyDirectoryWithoutGit, directoryExists } from "../infra/filesystem";
 import { resolveSource, resolveSourceDetails } from "../infra/git";
 import { readSymlinks } from "../infra/links";

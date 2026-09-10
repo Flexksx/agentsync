@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
-import { VENDORS, vendorLayouts } from "../src/domain/vendor";
+import { VENDORS, vendorLayouts } from "@ponte/core";
 
 describe("vendorLayouts", () => {
   it("nests Antigravity skills and agents below the shared Gemini root", () => {

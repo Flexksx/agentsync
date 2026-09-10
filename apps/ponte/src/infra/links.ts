@@ -1,6 +1,6 @@
 import { lstat, mkdir, readdir, readlink, rm, symlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { Link, VendorPlan } from "../domain/link";
+import type { Link, VendorPlan } from "@ponte/core";
 
 const symlinkTarget = async (path: string): Promise<string | null> => {
   try {

@@ -1,16 +1,16 @@
 import {
   type Config,
   DEFAULT_SYSTEM_PROMPT_FILE,
-  type SourceEntry,
-  type VendorConfig,
-} from "../domain/config";
-import {
+  isVendor,
   type LockEntry,
   PROJECT_CONFIG_FILE,
   type ProjectConfig,
   type ProjectLock,
-} from "../domain/project";
-import { isVendor, VENDORS, type VendorName } from "../domain/vendor";
+  type SourceEntry,
+  VENDORS,
+  type VendorConfig,
+  type VendorName,
+} from "@ponte/core";
 
 const BARE_KEY = /^[A-Za-z0-9_-]+$/;
 

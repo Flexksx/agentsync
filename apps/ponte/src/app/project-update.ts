@@ -1,11 +1,12 @@
-import type { SourceEntry } from "../domain/config";
 import {
+  isGitSource,
   type LockEntry,
   type ProjectLayout,
   type ProjectLock,
+  parseSource,
+  type SourceEntry,
   vendoredSkillPath,
-} from "../domain/project";
-import { isGitSource, parseSource } from "../domain/source";
+} from "@ponte/core";
 import { directoriesDiffer, directoryExists, removeDirectory } from "../infra/filesystem";
 import { resolveSource } from "../infra/git";
 import { gitCacheDirectoryPath } from "../infra/paths";
