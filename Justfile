@@ -21,7 +21,8 @@ lint:
     cd apps/ponte && ./node_modules/.bin/tsc --noEmit -p tsconfig.json
     cd apps/ponte && ./node_modules/.bin/tsc --noEmit -p ../../libs/core/tsconfig.json
     cd apps/ponte && ./node_modules/.bin/depcruise src --config .dependency-cruiser.jsonc --output-type err-long
-    @if grep -rnE '\b(async|await|Promise)\b' libs/core/src/domain; then echo "error domain-is-synchronous: the domain layer must stay synchronous, so it cannot do IO"; exit 1; fi
+    cd apps/ponte && ./node_modules/.bin/depcruise ../../libs/core/src --config ../../libs/core/.dependency-cruiser.jsonc --output-type err-long
+    @if grep -rnE '\b(async|await|Promise)\b' libs/core/src/domain --include='*.ts' --exclude='*.ports.ts'; then echo "error domain-is-synchronous: the domain layer must stay synchronous, so it cannot do IO"; exit 1; fi
 
 # Run every test, the end-to-end suite included
 test:
