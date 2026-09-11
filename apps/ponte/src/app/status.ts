@@ -1,11 +1,16 @@
-import { classifyVendor, type VendorState } from "../domain/link";
-import { VENDORS, type VendorName } from "../domain/vendor";
-import { fileExists } from "../infra/filesystem";
-import { readSymlinks } from "../infra/links";
-import { promptFilePath } from "../infra/paths";
-import { requireConfig } from "./configuration";
-import { planVendors } from "./resolve";
-import { MissingSystemPromptError } from "./sync";
+import {
+  type Config,
+  err,
+  type FileExists,
+  getVendorState,
+  ok,
+  type ReadSymlinks,
+  type Result,
+  VENDORS,
+  type VendorName,
+  type VendorState,
+} from "@ponte/core";
+import type { BuildVendorPlans } from "./resolve";
 
 export type VendorStatus = {
   readonly name: VendorName;
@@ -19,24 +24,30 @@ export type StatusReport = {
   readonly vendors: readonly VendorStatus[];
 };
 
-export const readStatus = async (): Promise<StatusReport> => {
-  const config = await requireConfig();
-  const promptPath = promptFilePath(config.systemPromptFile);
-  if (!(await fileExists(promptPath))) {
-    throw new MissingSystemPromptError(config.systemPromptFile);
-  }
+export const createGetStatusReport =
+  (
+    fileExists: FileExists,
+    readSymlinks: ReadSymlinks,
+    buildVendorPlans: BuildVendorPlans,
+    resolvePromptPath: (filename: string) => string,
+  ) =>
+  async (config: Config): Promise<Result<StatusReport, string>> => {
+    const promptPath = resolvePromptPath(config.systemPromptFile);
+    if (!(await fileExists(promptPath))) {
+      return err(`system prompt not found: ${config.systemPromptFile}`);
+    }
 
-  const plans = await planVendors(config, promptPath);
-  const vendors: VendorStatus[] = [];
-  for (const name of VENDORS) {
-    const enabled = config.vendors[name]?.enabled === true;
-    const actual = await readSymlinks(plans[name]);
-    vendors.push({
-      name,
-      enabled,
-      linkCount: actual.size,
-      state: enabled ? classifyVendor(plans[name], actual) : "disabled",
-    });
-  }
-  return { promptFile: config.systemPromptFile, vendors };
-};
+    const plans = await buildVendorPlans(config, promptPath);
+    const vendors: VendorStatus[] = [];
+    for (const name of VENDORS) {
+      const enabled = config.vendors[name]?.enabled === true;
+      const actual = await readSymlinks(plans[name]);
+      vendors.push({
+        name,
+        enabled,
+        linkCount: actual.size,
+        state: enabled ? getVendorState(plans[name], actual) : "disabled",
+      });
+    }
+    return ok({ promptFile: config.systemPromptFile, vendors });
+  };

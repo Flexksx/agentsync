@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { type Config, normalizeConfig, type SourceEntry } from "../src/domain/config";
-import { isGitSource, parseSource } from "../src/domain/source";
+import {
+  type Config,
+  isGitSource,
+  parseSource,
+  resolveConfigPaths,
+  type SourceEntry,
+} from "@ponte/core";
 import { ConfigError, decodeConfig } from "../src/infra/config-codec";
 
 const cfgWith = (skills: Record<string, SourceEntry> = {}) =>
@@ -34,7 +39,10 @@ describe("parseSource", () => {
     });
   });
   it("parses a local source and drops git-only fields", () => {
-    expect(parseSource("/local/dir")).toEqual({ type: "local", path: "/local/dir" });
+    expect(parseSource("/local/dir")).toEqual({
+      type: "local",
+      path: "/local/dir",
+    });
   });
 });
 
@@ -81,14 +89,17 @@ describe("decodeConfig", () => {
   });
 });
 
-describe("normalizeConfig", () => {
+describe("resolveConfigPaths", () => {
   it("expands relative local paths against the config dir", () => {
-    const norm = normalizeConfig(cfgWith({ s: { source: "skills/s" } }), "/cfg");
+    const norm = resolveConfigPaths(
+      cfgWith({ s: { source: "skills/s" } }),
+      "/cfg",
+    );
     expect(norm.skills.s?.source).toBe("/cfg/skills/s");
   });
 
   it("leaves git sources and absolute paths untouched", () => {
-    const norm = normalizeConfig(
+    const norm = resolveConfigPaths(
       cfgWith({ git: { source: "https://x/y" }, abs: { source: "/abs/path" } }),
       "/cfg",
     );
